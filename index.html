@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="theme-color" content="#0a0f0d" />
+  <title>GreenCare Tycoon</title>
+  <link rel="stylesheet" href="src/styles/main.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div id="game-container"></div>
+  <div id="ui-overlay"><div class="toast-container" id="toast-container"></div></div>
+  <!-- Phaser 3 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+
+  <!-- Core Engine -->
+  <script src="src/core/Constants.js"></script>
+  <script src="src/core/EventBus.js"></script>
+  <script src="src/core/SaveManager.js"></script>
+  <script src="src/core/AudioManager.js"></script>
+
+  <!-- Managers -->
+  <script src="src/managers/GameManager.js"></script>
+  <script src="src/managers/EconomyManager.js"></script>
+  <script src="src/managers/PlantManager.js"></script>
+  <script src="src/managers/GeneticsManager.js"></script>
+  <script src="src/managers/EmployeeManager.js"></script>
+  <script src="src/managers/ResearchManager.js"></script>
+  <script src="src/managers/FacilityManager.js"></script>
+  <script src="src/managers/DispensaryManager.js"></script>
+  <script src="src/managers/EventManager.js"></script>
+  <script src="src/managers/AchievementManager.js"></script>
+  <script src="src/managers/ProgressionManager.js"></script>
+  <script src="src/managers/NotificationManager.js"></script>
+
+  <!-- UI Helpers -->
+  <script src="src/ui/UIHelpers.js"></script>
+
+  <!-- Game Systems -->
+  <script src="src/systems/MonetizationHooks.js"></script>
+  <script src="src/systems/ParticleSystem.js"></script>
+  <script src="src/systems/NewsSystem.js"></script>
+  <script src="src/systems/DailyRewardSystem.js"></script>
+  <script src="src/systems/AICompetitors.js"></script>
+
+  <!-- Scenes -->
+  <script src="src/scenes/BootScene.js"></script>
+  <script src="src/scenes/PreloadScene.js"></script>
+  <script src="src/scenes/MainMenuScene.js"></script>
+  <script src="src/scenes/CompanyCreationScene.js"></script>
+  <script src="src/scenes/TutorialScene.js"></script>
+  <script src="src/scenes/UIScene.js"></script>
+  <script src="src/scenes/GameScene.js"></script>
+  <script src="src/scenes/GrowRoomScene.js"></script>
+  <script src="src/scenes/DispensaryScene.js"></script>
+  <script src="src/scenes/ResearchScene.js"></script>
+  <script src="src/scenes/EmployeeScene.js"></script>
+  <script src="src/scenes/MarketScene.js"></script>
+  <script src="src/scenes/AnalyticsScene.js"></script>
+  <script src="src/scenes/SettingsScene.js"></script>
+  <script src="src/scenes/AchievementsScene.js"></script>
+  <script src="src/scenes/EncyclopediaScene.js"></script>
+
+  <!-- Entry Point -->
+  <script src="src/main.js"></script>
+</body>
+</html>
