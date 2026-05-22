@@ -1,72 +1,227 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <meta name="mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="theme-color" content="#0a0f0d" />
-  <title>GreenCare Tycoon</title>
-  <link rel="stylesheet" href="src/styles/main.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Exo+2:wght@300;400;600;700&display=swap" rel="stylesheet" />
+  <title>Football Career Simulator</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0b0f1a;
+      color: white;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .box {
+      max-width: 800px;
+      margin: auto;
+      background: #151b2d;
+      padding: 20px;
+      border-radius: 12px;
+    }
+
+    button {
+      padding: 10px;
+      margin: 5px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .train { background: #00c853; }
+    .match { background: #ff9800; }
+    .save { background: #2979ff; }
+    .reset { background: #ff3d00; }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .card {
+      background: #1f2942;
+      padding: 10px;
+      border-radius: 10px;
+    }
+  </style>
 </head>
+
 <body>
-  <div id="game-container"></div>
-  <div id="ui-overlay"><div class="toast-container" id="toast-container"></div></div>
-  <!-- Phaser 3 CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
 
-  <!-- Core Engine -->
-  <script src="src/core/Constants.js"></script>
-  <script src="src/core/EventBus.js"></script>
-  <script src="src/core/SaveManager.js"></script>
-  <script src="src/core/AudioManager.js"></script>
+<div class="box">
 
-  <!-- Managers -->
-  <script src="src/managers/GameManager.js"></script>
-  <script src="src/managers/EconomyManager.js"></script>
-  <script src="src/managers/PlantManager.js"></script>
-  <script src="src/managers/GeneticsManager.js"></script>
-  <script src="src/managers/EmployeeManager.js"></script>
-  <script src="src/managers/ResearchManager.js"></script>
-  <script src="src/managers/FacilityManager.js"></script>
-  <script src="src/managers/DispensaryManager.js"></script>
-  <script src="src/managers/EventManager.js"></script>
-  <script src="src/managers/AchievementManager.js"></script>
-  <script src="src/managers/ProgressionManager.js"></script>
-  <script src="src/managers/NotificationManager.js"></script>
+  <h1>⚽ Football Career Simulator</h1>
 
-  <!-- UI Helpers -->
-  <script src="src/ui/UIHelpers.js"></script>
+  <h2>👤 Player Profile</h2>
+  <p>Age: <span id="age"></span></p>
+  <p>Club: <span id="club"></span></p>
+  <p>Money: £<span id="money"></span></p>
+  <p>Reputation: <span id="rep"></span></p>
 
-  <!-- Game Systems -->
-  <script src="src/systems/MonetizationHooks.js"></script>
-  <script src="src/systems/ParticleSystem.js"></script>
-  <script src="src/systems/NewsSystem.js"></script>
-  <script src="src/systems/DailyRewardSystem.js"></script>
-  <script src="src/systems/AICompetitors.js"></script>
+  <hr>
 
-  <!-- Scenes -->
-  <script src="src/scenes/BootScene.js"></script>
-  <script src="src/scenes/PreloadScene.js"></script>
-  <script src="src/scenes/MainMenuScene.js"></script>
-  <script src="src/scenes/CompanyCreationScene.js"></script>
-  <script src="src/scenes/TutorialScene.js"></script>
-  <script src="src/scenes/UIScene.js"></script>
-  <script src="src/scenes/GameScene.js"></script>
-  <script src="src/scenes/GrowRoomScene.js"></script>
-  <script src="src/scenes/DispensaryScene.js"></script>
-  <script src="src/scenes/ResearchScene.js"></script>
-  <script src="src/scenes/EmployeeScene.js"></script>
-  <script src="src/scenes/MarketScene.js"></script>
-  <script src="src/scenes/AnalyticsScene.js"></script>
-  <script src="src/scenes/SettingsScene.js"></script>
-  <script src="src/scenes/AchievementsScene.js"></script>
-  <script src="src/scenes/EncyclopediaScene.js"></script>
+  <h2>📊 Stats</h2>
+  <div class="stats">
+    <div class="card">⚡ Pace: <span id="pace"></span></div>
+    <div class="card">🎯 Shooting: <span id="shoot"></span></div>
+    <div class="card">🎮 Passing: <span id="pass"></span></div>
+    <div class="card">💪 Fitness: <span id="fit"></span></div>
+  </div>
 
-  <!-- Entry Point -->
-  <script src="src/main.js"></script>
+  <hr>
+
+  <h2>🎮 Actions</h2>
+
+  <button class="train" onclick="train()">Train</button>
+  <button class="match" onclick="playMatch()">Play Match</button>
+  <button class="save" onclick="saveGame()">Save</button>
+  <button class="reset" onclick="resetGame()">Reset</button>
+
+  <hr>
+
+  <h2>📰 Career Log</h2>
+  <div id="log"></div>
+
+</div>
+
+<script>
+
+/* -----------------------
+   GAME STATE
+------------------------*/
+
+let game = {
+  age: 16,
+  club: "Youth Academy",
+  money: 0,
+  rep: 0,
+
+  stats: {
+    pace: 30,
+    shoot: 30,
+    pass: 30,
+    fit: 50
+  },
+
+  log: []
+};
+
+/* -----------------------
+   LOAD SAVE
+------------------------*/
+function loadGame() {
+  let save = localStorage.getItem("footballGame");
+  if (save) game = JSON.parse(save);
+}
+loadGame();
+
+/* -----------------------
+   SAVE / RESET
+------------------------*/
+function saveGame() {
+  localStorage.setItem("footballGame", JSON.stringify(game));
+  addLog("💾 Game saved");
+}
+
+function resetGame() {
+  localStorage.removeItem("footballGame");
+  location.reload();
+}
+
+/* -----------------------
+   LOG SYSTEM
+------------------------*/
+function addLog(text) {
+  game.log.unshift(text);
+  if (game.log.length > 8) game.log.pop();
+}
+
+/* -----------------------
+   TRAINING
+------------------------*/
+function train() {
+  let stat = ["pace", "shoot", "pass"][Math.floor(Math.random() * 3)];
+
+  game.stats[stat] += Math.floor(Math.random() * 3) + 1;
+  game.stats.fit -= 2;
+
+  game.age += 0.1;
+
+  addLog(`🏋️ Training improved ${stat}`);
+  updateUI();
+}
+
+/* -----------------------
+   MATCH SIMULATION
+------------------------*/
+function playMatch() {
+  let rating =
+    game.stats.pace +
+    game.stats.shoot +
+    game.stats.pass +
+    game.stats.fit;
+
+  let opponent = 120 + Math.random() * 60;
+
+  game.age += 0.2;
+
+  if (rating > opponent) {
+    game.money += 500;
+    game.rep += 5;
+    addLog("🏆 Won the match!");
+  } else {
+    game.rep += 1;
+    addLog("😓 Lost the match...");
+  }
+
+  levelUpCheck();
+  updateUI();
+}
+
+/* -----------------------
+   LEVEL / CLUB PROGRESSION
+------------------------*/
+function levelUpCheck() {
+  if (game.rep >= 20 && game.club === "Youth Academy") {
+    game.club = "Semi-Pro FC";
+    addLog("📢 Signed for Semi-Pro FC!");
+  }
+
+  if (game.rep >= 60 && game.club === "Semi-Pro FC") {
+    game.club = "Pro Club";
+    addLog("🔥 Signed for Pro Club!");
+  }
+}
+
+/* -----------------------
+   UI UPDATE
+------------------------*/
+function updateUI() {
+  document.getElementById("age").innerText = game.age.toFixed(1);
+  document.getElementById("club").innerText = game.club;
+  document.getElementById("money").innerText = game.money;
+  document.getElementById("rep").innerText = game.rep;
+
+  document.getElementById("pace").innerText = game.stats.pace;
+  document.getElementById("shoot").innerText = game.stats.shoot;
+  document.getElementById("pass").innerText = game.stats.pass;
+  document.getElementById("fit").innerText = game.stats.fit;
+
+  let logHTML = "";
+  game.log.forEach(l => {
+    logHTML += `<p>${l}</p>`;
+  });
+
+  document.getElementById("log").innerHTML = logHTML;
+}
+
+/* -----------------------
+   INIT
+------------------------*/
+updateUI();
+
+</script>
+
 </body>
 </html>
