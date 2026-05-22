@@ -32,6 +32,17 @@
     .save { background: #2979ff; }
     .reset { background: #ff3d00; }
 
+    .offer {
+      background: #222c44;
+      padding: 15px;
+      border-radius: 10px;
+      margin-top: 10px;
+      display: none;
+    }
+
+    .accept { background: #00c853; }
+    .reject { background: #ff3d00; }
+
     .stats {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -80,6 +91,15 @@
 
   <hr>
 
+  <div id="offerBox" class="offer">
+    <h2>📩 Transfer Offer</h2>
+    <p id="offerText"></p>
+    <button class="accept" onclick="acceptOffer()">Accept</button>
+    <button class="reject" onclick="rejectOffer()">Reject</button>
+  </div>
+
+  <hr>
+
   <h2>📰 Career Log</h2>
   <div id="log"></div>
 
@@ -104,11 +124,12 @@ let game = {
     fit: 50
   },
 
-  log: []
+  log: [],
+  offer: null
 };
 
 /* -----------------------
-   LOAD SAVE
+   LOAD / SAVE
 ------------------------*/
 function loadGame() {
   let save = localStorage.getItem("footballGame");
@@ -116,9 +137,6 @@ function loadGame() {
 }
 loadGame();
 
-/* -----------------------
-   SAVE / RESET
-------------------------*/
 function saveGame() {
   localStorage.setItem("footballGame", JSON.stringify(game));
   addLog("💾 Game saved");
@@ -148,7 +166,7 @@ function train() {
 
   game.age += 0.1;
 
-  addLog(`🏋️ Training improved ${stat}`);
+  addLog(`🏋️ Improved ${stat}`);
   updateUI();
 }
 
@@ -162,7 +180,7 @@ function playMatch() {
     game.stats.pass +
     game.stats.fit;
 
-  let opponent = 120 + Math.random() * 60;
+  let opponent = 120 + Math.random() * 80;
 
   game.age += 0.2;
 
@@ -175,53 +193,33 @@ function playMatch() {
     addLog("😓 Lost the match...");
   }
 
+  checkTransferOffer();
   levelUpCheck();
   updateUI();
 }
 
 /* -----------------------
-   LEVEL / CLUB PROGRESSION
+   TRANSFER SYSTEM
 ------------------------*/
-function levelUpCheck() {
-  if (game.rep >= 20 && game.club === "Youth Academy") {
-    game.club = "Semi-Pro FC";
-    addLog("📢 Signed for Semi-Pro FC!");
-  }
+function checkTransferOffer() {
+  let chance = Math.random();
 
-  if (game.rep >= 60 && game.club === "Semi-Pro FC") {
-    game.club = "Pro Club";
-    addLog("🔥 Signed for Pro Club!");
+  if (chance > 0.6) {
+    let clubs = [
+      { name: "City Rovers", rep: 10, salary: 300 },
+      { name: "United Town", rep: 25, salary: 800 },
+      { name: "FC Albion", rep: 50, salary: 1500 },
+      { name: "Elite Stars", rep: 80, salary: 3000 }
+    ];
+
+    let offer = clubs[Math.floor(Math.random() * clubs.length)];
+
+    if (game.rep >= offer.rep) {
+      game.offer = offer;
+      showOffer();
+    }
   }
 }
 
 /* -----------------------
-   UI UPDATE
-------------------------*/
-function updateUI() {
-  document.getElementById("age").innerText = game.age.toFixed(1);
-  document.getElementById("club").innerText = game.club;
-  document.getElementById("money").innerText = game.money;
-  document.getElementById("rep").innerText = game.rep;
-
-  document.getElementById("pace").innerText = game.stats.pace;
-  document.getElementById("shoot").innerText = game.stats.shoot;
-  document.getElementById("pass").innerText = game.stats.pass;
-  document.getElementById("fit").innerText = game.stats.fit;
-
-  let logHTML = "";
-  game.log.forEach(l => {
-    logHTML += `<p>${l}</p>`;
-  });
-
-  document.getElementById("log").innerHTML = logHTML;
-}
-
-/* -----------------------
-   INIT
-------------------------*/
-updateUI();
-
-</script>
-
-</body>
-</html>
+   OFFER
