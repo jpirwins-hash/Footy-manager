@@ -1,495 +1,124 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Career Mode Engine</title>
+import React, { useEffect, useState } from "react";
+import { motion } from "framer-motion";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
-  <style>
-    body {
-      font-family: Arial;
-      background: #0b0f1a;
-      color: white;
-      text-align: center;
-      padding: 20px;
-    }
+// -----------------------------
+// FOOTBALL CAREER MODE v1.1
+// PRO MOBILE GAME UI BUILD
+// -----------------------------
 
-    .box {
-      max-width: 1250px;
-      margin: auto;
-      background: #151b2d;
-      padding: 20px;
-      border-radius: 12px;
-    }
-
-    #game { display:none; }
-
-    .nav {
-      display:flex;
-      flex-wrap:wrap;
-      justify-content:center;
-      gap:5px;
-    }
-
-    .nav button {
-      background:#263159;
-      color:white;
-      border:none;
-      padding:10px;
-      border-radius:8px;
-      cursor:pointer;
-    }
-
-    .tab { display:none; }
-    .active { background:#00c853 !important; }
-
-    table {
-      width:100%;
-      border-collapse:collapse;
-    }
-
-    th, td {
-      border:1px solid #2a355f;
-      padding:6px;
-    }
-
-    th { background:#111a33; }
-
-    #feed {
-      background:#0b1024;
-      padding:10px;
-      border-radius:10px;
-      min-height:140px;
-      text-align:left;
-    }
-
-    .panel {
-      background:#1b2440;
-      padding:10px;
-      border-radius:10px;
-      margin-top:10px;
-    }
-
-    button {
-      padding:8px;
-      margin:4px;
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-    }
-  </style>
-</head>
-
-<body>
-
-<div class="box">
-
-<!-- INTRO -->
-<div id="intro">
-  <h1>⚽ Career Mode Engine</h1>
-
-  <input id="name" placeholder="Enter player name">
-  <br><br>
-
-  <button onclick="start()">Start Career</button>
-</div>
-
-<!-- GAME -->
-<div id="game">
-
-  <!-- NAV -->
-  <div class="nav">
-    <button onclick="openTab('home')">Home</button>
-    <button onclick="openTab('player')">Player</button>
-    <button onclick="openTab('training')">Training</button>
-    <button onclick="openTab('fixtures')">Fixtures</button>
-    <button onclick="openTab('league')">League</button>
-    <button onclick="openTab('contracts')">Contracts</button>
-  </div>
-
-  <!-- HOME -->
-  <div id="home" class="tab">
-    <h2>🏠 Career Hub</h2>
-    <p id="homeInfo"></p>
-    <p>Season: <span id="season"></span> | Week: <span id="week"></span></p>
-  </div>
-
-  <!-- PLAYER -->
-  <div id="player" class="tab">
-    <h2>👤 Player Profile</h2>
-
-    <div class="panel">
-      <p>Name: <span id="pname"></span></p>
-      <p>Club: <span id="club"></span></p>
-      <p>Overall Rating: <span id="ovr"></span></p>
-      <p>Condition: <span id="fatigue"></span></p>
-      <p>Morale: <span id="morale"></span></p>
-      <p>Form: <span id="form"></span></p>
-    </div>
-
-    <div class="panel">
-      <p>Pace: <span id="pace"></span></p>
-      <p>Shooting: <span id="shoot"></span></p>
-      <p>Passing: <span id="pass"></span></p>
-      <p>Fitness: <span id="fit"></span></p>
-    </div>
-  </div>
-
-  <!-- TRAINING -->
-  <div id="training" class="tab">
-    <h2>🏋️ Training Centre</h2>
-
-    <button onclick="train('pace')">Speed Drills</button>
-    <button onclick="train('shoot')">Finishing Drills</button>
-    <button onclick="train('pass')">Passing Drills</button>
-    <button onclick="train('fit')">Endurance</button>
-
-    <p>Training improves stats but reduces condition and increases injury risk</p>
-  </div>
-
-  <!-- FIXTURES -->
-  <div id="fixtures" class="tab">
-    <h2>⚽ Fixtures</h2>
-
-    <div id="fixtureList"></div>
-
-    <button onclick="playMatch()">Play Next Match</button>
-
-    <h3>Match Feed</h3>
-    <div id="feed"></div>
-  </div>
-
-  <!-- LEAGUE -->
-  <div id="league" class="tab">
-    <h2>🏆 League Table</h2>
-
-    <table>
-      <thead>
-        <tr>
-          <th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th>
-        </tr>
-      </thead>
-      <tbody id="table"></tbody>
-    </table>
-  </div>
-
-  <!-- CONTRACTS -->
-  <div id="contracts" class="tab">
-    <h2>💼 Contract Offers</h2>
-    <div id="offers"></div>
-  </div>
-
-</div>
-
-</div>
-
-<script>
-
-/* ---------------- CORE STATE ---------------- */
-
-let game = {
-  name:"",
-  club:"Manchester United",
-
-  season:1,
-  week:1,
-
-  morale:50,
-  form:0,
-  fatigue:100,
-
-  stats:{
-    pace:40,
-    shoot:40,
-    pass:40,
-    fit:50
+const initialState = {
+  season: 2026,
+  money: 5000,
+  reputation: 10,
+  club: "Free Agent",
+  player: {
+    skill: 50,
+    stamina: 50,
+    morale: 50,
   },
-
-  teams:[],
-  fixtures:[],
-  offers:[]
+  fixtures: [
+    { id: 1, opponent: "Rovers FC", difficulty: 40, played: false },
+    { id: 2, opponent: "City United", difficulty: 60, played: false },
+    { id: 3, opponent: "Albion Town", difficulty: 55, played: false },
+  ],
+  jobs: [
+    { id: 1, club: "Rangers Reserves", repReq: 10, salary: 1200 },
+    { id: 2, club: "Aberdeen U21", repReq: 20, salary: 2000 },
+    { id: 3, club: "Hearts FC", repReq: 35, salary: 3500 },
+  ],
+  log: [],
 };
 
-/* ---------------- TEAMS ---------------- */
+function saveGame(state) {
+  localStorage.setItem("career_v1", JSON.stringify(state));
+}
 
-function team(n){
-  return {
-    name:n,
-    p:0,w:0,l:0,pts:0,
-    strength:60+Math.random()*20
+function loadGame() {
+  const data = localStorage.getItem("career_v1");
+  return data ? JSON.parse(data) : initialState;
+}
+
+export default function Game() {
+  const [state, setState] = useState(loadGame());
+
+  useEffect(() => {
+    saveGame(state);
+  }, [state]);
+
+  const addLog = (msg) => {
+    setState((s) => ({
+      ...s,
+      log: [msg, ...s.log].slice(0, 8),
+    }));
   };
-}
 
-function initLeague(){
-  game.teams=[
-    team("Man City"),
-    team("Arsenal"),
-    team("Liverpool"),
-    team("Chelsea"),
-    team("Man United"),
-    team("Tottenham"),
-    team("Newcastle"),
-    team("Aston Villa")
-  ];
+  const train = (type) => {
+    setState((s) => {
+      const p = { ...s.player };
 
-  generateFixtures();
-}
+      if (type === "skill") p.skill += 2;
+      if (type === "stamina") p.stamina += 2;
+      if (type === "morale") p.morale += 2;
 
-/* ---------------- FIXTURES SYSTEM ---------------- */
+      return { ...s, player: p };
+    });
 
-function generateFixtures(){
-  game.fixtures = [];
+    addLog(`Training improved ${type}`);
+  };
 
-  for(let i=0;i<game.teams.length;i++){
-    for(let j=i+1;j<game.teams.length;j++){
-      game.fixtures.push([game.teams[i],game.teams[j]]);
+  const playMatch = (fix) => {
+    const power =
+      state.player.skill + state.player.stamina * 0.3;
+
+    const win =
+      power > fix.difficulty + Math.random() * 20;
+
+    setState((s) => ({
+      ...s,
+      fixtures: s.fixtures.map((f) =>
+        f.id === fix.id ? { ...f, played: true } : f
+      ),
+      money: s.money + (win ? 800 : 150),
+      reputation: s.reputation + (win ? 3 : 0),
+    }));
+
+    addLog(win ? "BIG WIN! 🔥" : "Tough loss...");
+  };
+
+  const applyJob = (job) => {
+    if (state.reputation >= job.repReq) {
+      setState((s) => ({
+        ...s,
+        club: job.club,
+        money: s.money + job.salary,
+      }));
+      addLog(`Signed with ${job.club} ✍️`);
+    } else {
+      addLog("Not enough reputation");
     }
-  }
-
-  shuffle(game.fixtures);
-}
-
-function shuffle(a){
-  for(let i=a.length-1;i>0;i--){
-    let j=Math.floor(Math.random()*i);
-    [a[i],a[j]]=[a[j],a[i]];
-  }
-}
-
-/* ---------------- START ---------------- */
-
-function start(){
-  game.name=document.getElementById("name").value;
-  if(!game.name) return alert("Enter name");
-
-  initLeague();
-
-  document.getElementById("intro").style.display="none";
-  document.getElementById("game").style.display="block";
-
-  openTab("home");
-  updateUI();
-}
-
-/* ---------------- TABS ---------------- */
-
-function openTab(t){
-  document.querySelectorAll(".tab").forEach(x=>x.style.display="none");
-  document.getElementById(t).style.display="block";
-
-  if(t==="fixtures") showFixtures();
-  if(t==="contracts") showOffers();
-}
-
-/* ---------------- TRAINING ---------------- */
-
-function train(type){
-
-  let gain = 1 + Math.random()*2;
-
-  game.stats[type]+=gain;
-
-  game.fatigue-=8;
-  game.morale+=1;
-
-  if(game.fatigue<0)game.fatigue=0;
-
-  game.overall = calcOvr();
-
-  addFeed("🏋️ "+type+" improved +"+gain.toFixed(1));
-
-  updateUI();
-}
-
-/* ---------------- OVERALL ---------------- */
-
-function calcOvr(){
-  let s=game.stats;
-  return ((s.pace+s.shoot+s.pass+s.fit)/4).toFixed(1);
-}
-
-/* ---------------- MATCH ENGINE ---------------- */
-
-function playMatch(){
-
-  let match=game.fixtures.shift();
-  if(!match) return addFeed("Season complete!");
-
-  let [a,b]=match;
-
-  let playerPower =
-    game.overall*1.2 +
-    game.form +
-    game.morale/10 -
-    (game.fatigue<40?10:0);
-
-  let teamA = a.strength;
-  let teamB = b.strength;
-
-  let scoreA=0,scoreB=0;
-
-  let feed=[`⚽ ${a.name} vs ${b.name}`];
-
-  for(let i=0;i<6;i++){
-
-    let r=Math.random()*100;
-
-    if(r<playerPower/3){scoreA++;feed.push("🔥 "+a.name+" scores");}
-    if(r<teamB/4){scoreB++;feed.push("💥 "+b.name+" scores");}
-  }
-
-  if(scoreA>scoreB){
-    a.w++;a.pts+=3;
-    game.form+=2;
-    feed.push("🏆 "+a.name+" WIN");
-  } else {
-    b.w++;b.pts+=3;
-    game.form-=2;
-    feed.push("🏆 "+b.name+" WIN");
-  }
-
-  game.fatigue-=12;
-  game.week++;
-
-  if(game.week>10) endSeason();
-
-  generateContracts();
-
-  document.getElementById("feed").innerHTML=
-    feed.map(x=>"<p>"+x+"</p>").join("");
-
-  updateUI();
-  showFixtures();
-}
-
-/* ---------------- SEASON ---------------- */
-
-function endSeason(){
-
-  let champ=[...game.teams].sort((a,b)=>b.pts-a.pts)[0];
-
-  addFeed("🏆 SEASON WINNER: "+champ.name);
-
-  game.season++;
-  game.week=1;
-
-  game.teams.forEach(t=>{
-    t.p=0;t.w=0;t.l=0;t.pts=0;
-  });
-
-  generateFixtures();
-}
-
-/* ---------------- FIXTURES UI ---------------- */
-
-function showFixtures(){
-  document.getElementById("fixtureList").innerHTML =
-    game.fixtures.slice(0,8)
-      .map(f=>`<p>${f[0].name} vs ${f[1].name}</p>`)
-      .join("");
-}
-
-/* ---------------- CONTRACT SYSTEM ---------------- */
-
-function generateContracts(){
-
-  if(Math.random()>0.6){
-
-    let clubs=[
-      {name:"Arsenal",wage:200,bonus:50},
-      {name:"Liverpool",wage:300,bonus:80},
-      {name:"Chelsea",wage:350,bonus:100},
-      {name:"Man City",wage:600,bonus:150}
-    ];
-
-    game.offers.push(clubs[Math.random()*clubs.length|0]);
-  }
-}
-
-function showOffers(){
-
-  let html="";
-
-  if(game.offers.length===0){
-    html="<p>No offers yet</p>";
-  }
-
-  game.offers.forEach((o,i)=>{
-    html+=`
-      <div class="panel">
-        <p>${o.name}</p>
-        <p>Wage: £${o.wage}</p>
-        <p>Bonus: £${o.bonus}</p>
-
-        <button onclick="accept(${i})">Accept</button>
-        <button onclick="negotiate(${i})">Negotiate</button>
-      </div>
-    `;
-  });
-
-  document.getElementById("offers").innerHTML=html;
-}
-
-function accept(i){
-  game.club=game.offers[i].name;
-  game.offers=[];
-  updateUI();
-}
-
-function negotiate(i){
-  game.offers[i].wage+=50;
-  game.offers[i].bonus+=20;
-  showOffers();
-}
-
-/* ---------------- FEED ---------------- */
-
-function addFeed(t){
-  document.getElementById("feed").innerHTML=
-    "<p>"+t+"</p>"+document.getElementById("feed").innerHTML;
-}
-
-/* ---------------- UI ---------------- */
-
-function updateUI(){
-
-  document.getElementById("homeInfo").innerText=
-    game.name+" | "+game.club;
-
-  document.getElementById("season").innerText=game.season;
-  document.getElementById("week").innerText=game.week;
-
-  document.getElementById("pname").innerText=game.name;
-  document.getElementById("club").innerText=game.club;
-
-  document.getElementById("fatigue").innerText=game.fatigue.toFixed(0);
-  document.getElementById("morale").innerText=game.morale;
-  document.getElementById("form").innerText=game.form;
-
-  document.getElementById("ovr").innerText=calcOvr();
-
-  let s=game.stats;
-
-  document.getElementById("pace").innerText=s.pace.toFixed(1);
-  document.getElementById("shoot").innerText=s.shoot.toFixed(1);
-  document.getElementById("pass").innerText=s.pass.toFixed(1);
-  document.getElementById("fit").innerText=s.fit.toFixed(1);
-
-  let table="";
-
-  game.teams.forEach(t=>{
-    table+=`
-      <tr>
-        <td>${t.name}</td>
-        <td>${t.p}</td>
-        <td>${t.w}</td>
-        <td>${t.l}</td>
-        <td>${t.pts}</td>
-      </tr>`;
-  });
-
-  document.getElementById("table").innerHTML=table;
-}
-
-</script>
-
-</body>
-</html>
+  };
+
+  const glass =
+    "backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl";
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white p-4">
+
+      {/* HEADER */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-4"
+      >
+        <h1 className="text-3xl font-bold">Career Mode 1.1</h1>
+        <p className="text-white/60">Build your football legacy</p>
+      </motion.div>
+
+      {/* TOP STATS */}
+      <div className="grid grid-cols-4 gap-2 mb-4">
+        {[
+          { label: "Money", value: `£${state.money}` },
+          { label: "Rep", value
