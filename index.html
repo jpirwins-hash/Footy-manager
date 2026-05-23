@@ -77,6 +77,15 @@
     </div>
   </header>  <section id="dashboard-screen"><div class="grid grid-cols-2 gap-4 mb-6">
   <div class="card">
+    <div class="text-slate-400">Manager Reputation</div>
+    <div id="manager-rep" class="text-xl font-bold text-blue-400">Respected</div>
+  </div>
+
+  <div class="card">
+    <div class="text-slate-400">Club Finances</div>
+    <div id="club-finances" class="text-xl font-bold text-green-400">Healthy</div>
+  </div>
+  <div class="card">
     <div class="text-slate-400">Club</div>
     <div class="text-xl font-bold">Aberdeen FC</div>
   </div>
@@ -131,6 +140,37 @@
     <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
       <span>4. Hearts</span>
       <span>57 pts</span>
+    </div>
+  </div>
+</div>
+
+<div class="card mb-6">
+  <h2 class="text-xl font-bold mb-4">Board Objectives</h2>
+
+  <div class="space-y-3">
+    <div class="bg-slate-800 p-3 rounded-lg">Finish in Top 3</div>
+    <div class="bg-slate-800 p-3 rounded-lg">Reach Scottish Cup Semi Final</div>
+    <div class="bg-slate-800 p-3 rounded-lg">Develop Youth Players</div>
+  </div>
+</div>
+
+<div class="card mb-6">
+  <h2 class="text-xl font-bold mb-4">Upcoming Fixtures</h2>
+
+  <div class="space-y-3">
+    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
+      <span>Aberdeen vs Celtic</span>
+      <span>League</span>
+    </div>
+
+    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
+      <span>Hearts vs Aberdeen</span>
+      <span>Cup</span>
+    </div>
+
+    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
+      <span>Aberdeen vs Rangers</span>
+      <span>League</span>
     </div>
   </div>
 </div>
@@ -310,6 +350,19 @@ const players = [
   }
 ];
 
+const clubData = {
+  name: 'Aberdeen',
+  finances: 50000000,
+  wageBudget: 1200000,
+  transferBudget: 30000000,
+  sponsorship: 6000000,
+  stadium: 'Pittodrie Stadium',
+  capacity: 21000,
+  reputation: 78,
+  youthLevel: 72,
+  trainingLevel: 74
+};
+
 const transferTargets = [
   {
     name: 'Mateo Silva',
@@ -419,6 +472,91 @@ function renderTransfers() {
 
 function signPlayer(name) {
   addCommentary(`Scouting report requested for ${name}.`);
+
+  const fee = Math.floor(3000000 + Math.random() * 20000000);
+
+  addCommentary(`${name} estimated transfer fee: £${fee.toLocaleString()}`);
+}
+
+function simulateTransferWindow() {
+  const rumours = [
+    'Premier League club targeting Aberdeen defender.',
+    'Agent offers experienced striker to Aberdeen.',
+    'Celtic preparing £12M bid for young midfielder.',
+    'European scouts attend Aberdeen fixture.',
+    'Club considering stadium expansion plans.'
+  ];
+
+  addCommentary(rumours[Math.floor(Math.random() * rumours.length)]);
+}
+
+function calculateFinances() {
+  const ticketIncome = Math.floor(200000 + Math.random() * 600000);
+  const sponsorshipIncome = Math.floor(100000 + Math.random() * 300000);
+  const wages = Math.floor(250000 + Math.random() * 400000);
+
+  clubData.finances += ticketIncome + sponsorshipIncome - wages;
+
+  document.getElementById('money').innerText = `£${Math.floor(clubData.finances / 1000000)}M`;
+}
+
+function simulateTraining() {
+  players.forEach(player => {
+    if (Math.random() > 0.5) {
+      player.stamina = Math.min(100, player.stamina + 1);
+    }
+
+    if (Math.random() > 0.8) {
+      player.overall += 1;
+      addCommentary(`${player.name} improves significantly in training.`);
+    }
+
+    if (Math.random() > 0.95) {
+      addCommentary(`${player.name} suffers a minor training injury.`);
+      player.stamina -= 10;
+    }
+  });
+}
+
+function simulateLeague() {
+  const teams = ['Celtic', 'Rangers', 'Hearts', 'Hibernian', 'Aberdeen'];
+
+  const randomTeam = teams[Math.floor(Math.random() * teams.length)];
+
+  addCommentary(`${randomTeam} wins their latest league fixture.`);
+}
+
+function autosaveCareer() {
+  localStorage.setItem('footballSave', JSON.stringify({
+    clubData,
+    players,
+    season: document.getElementById('season').innerText,
+    scores: {
+      homeScore,
+      awayScore
+    }
+  }));
+}
+
+function loadCareer() {
+  const save = JSON.parse(localStorage.getItem('footballSave'));
+
+  if (!save) return;
+
+  addCommentary('Career save loaded successfully.');
+}
+
+function generateMatchEvent() {
+  const events = [
+    'Dangerous through ball into the box.',
+    'Crowd erupts after huge tackle in midfield.',
+    'Goalkeeper makes brilliant reaction save.',
+    'Counter attack developing rapidly.',
+    'Winger overlaps down the left side.',
+    'Fans chant loudly as pressure builds.'
+  ];
+
+  addCommentary(events[Math.floor(Math.random() * events.length)]);
 }
 
 function showScreen(id) {
@@ -637,7 +775,48 @@ if (!localStorage.getItem('footballSave')) {
   }));
 }
 
-console.log('Ultimate Football Manager Loaded Successfully');
+function advanceDay() {
+  const randomNews = [
+    'Rangers preparing major summer rebuild.',
+    'Young striker impresses in training.',
+    'Fans demand improved defensive performances.',
+    'Board pleased with financial growth.',
+    'Scout discovers highly rated teenager in Spain.',
+    'European clubs monitoring Aberdeen midfielder.',
+    'Captain delivers inspiring dressing room speech.',
+    'Training intensity increased ahead of derby match.'
+  ];
 
-</script></body>
-</html>
+  const feed = document.getElementById('news-feed');
+
+  const item = document.createElement('div');
+  item.className = 'bg-slate-800 p-3 rounded-lg';
+  item.innerText = randomNews[Math.floor(Math.random() * randomNews.length)];
+
+  feed.prepend(item);
+
+  if (feed.children.length > 8) {
+    feed.removeChild(feed.lastChild);
+  }
+
+  players.forEach(player => {
+    if (Math.random() > 0.5) {
+      player.morale = Math.min(100, player.morale + 1);
+    } else {
+      player.morale = Math.max(50, player.morale - 1);
+    }
+
+    if (player.age < 24 && Math.random() > 0.7) {
+      player.overall += 1;
+    }
+
+    if (player.age > 30 && Math.random() > 0.8) {
+      player.overall -= 1;
+    }
+  });
+
+  localStorage.setItem('footballSave', JSON.stringify({
+    players,
+    homeScore,
+    awayScore,
+    season: '2026/2
