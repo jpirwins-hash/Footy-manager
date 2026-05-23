@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Career Mode Football Simulator</title>
+  <title>Career Mode Engine</title>
 
   <style>
     body {
@@ -13,7 +13,7 @@
     }
 
     .box {
-      max-width: 1200px;
+      max-width: 1250px;
       margin: auto;
       background: #151b2d;
       padding: 20px;
@@ -22,29 +22,24 @@
 
     #game { display:none; }
 
-    button {
-      padding:10px;
-      margin:5px;
+    .nav {
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:5px;
+    }
+
+    .nav button {
+      background:#263159;
+      color:white;
       border:none;
+      padding:10px;
       border-radius:8px;
       cursor:pointer;
     }
 
-    .nav button { background:#263159; color:white; }
+    .tab { display:none; }
     .active { background:#00c853 !important; }
-
-    .grid {
-      display:grid;
-      grid-template-columns:1fr 1fr;
-      gap:10px;
-    }
-
-    .panel {
-      background:#1b2440;
-      padding:10px;
-      border-radius:10px;
-      margin-top:10px;
-    }
 
     table {
       width:100%;
@@ -58,8 +53,6 @@
 
     th { background:#111a33; }
 
-    .hidden { display:none; }
-
     #feed {
       background:#0b1024;
       padding:10px;
@@ -68,11 +61,19 @@
       text-align:left;
     }
 
-    input, select {
+    .panel {
+      background:#1b2440;
+      padding:10px;
+      border-radius:10px;
+      margin-top:10px;
+    }
+
+    button {
       padding:8px;
-      border-radius:6px;
+      margin:4px;
       border:none;
-      margin:5px;
+      border-radius:6px;
+      cursor:pointer;
     }
   </style>
 </head>
@@ -83,9 +84,9 @@
 
 <!-- INTRO -->
 <div id="intro">
-  <h1>⚽ Career Mode Simulator</h1>
+  <h1>⚽ Career Mode Engine</h1>
 
-  <input id="name" placeholder="Enter name">
+  <input id="name" placeholder="Enter player name">
   <br><br>
 
   <button onclick="start()">Start Career</button>
@@ -96,30 +97,32 @@
 
   <!-- NAV -->
   <div class="nav">
-    <button onclick="tab('home')">Home</button>
-    <button onclick="tab('player')">Player</button>
-    <button onclick="tab('training')">Training</button>
-    <button onclick="tab('fixtures')">Fixtures</button>
-    <button onclick="tab('league')">League</button>
-    <button onclick="tab('jobs')">Jobs</button>
+    <button onclick="openTab('home')">Home</button>
+    <button onclick="openTab('player')">Player</button>
+    <button onclick="openTab('training')">Training</button>
+    <button onclick="openTab('fixtures')">Fixtures</button>
+    <button onclick="openTab('league')">League</button>
+    <button onclick="openTab('contracts')">Contracts</button>
   </div>
 
   <!-- HOME -->
   <div id="home" class="tab">
-    <h2>🏠 Dashboard</h2>
+    <h2>🏠 Career Hub</h2>
     <p id="homeInfo"></p>
+    <p>Season: <span id="season"></span> | Week: <span id="week"></span></p>
   </div>
 
   <!-- PLAYER -->
-  <div id="player" class="tab hidden">
-    <h2>👤 Player Hub</h2>
+  <div id="player" class="tab">
+    <h2>👤 Player Profile</h2>
 
     <div class="panel">
       <p>Name: <span id="pname"></span></p>
       <p>Club: <span id="club"></span></p>
-      <p>Rating: <span id="rating"></span></p>
+      <p>Overall Rating: <span id="ovr"></span></p>
       <p>Condition: <span id="fatigue"></span></p>
-      <p>Morale: <span id="form"></span></p>
+      <p>Morale: <span id="morale"></span></p>
+      <p>Form: <span id="form"></span></p>
     </div>
 
     <div class="panel">
@@ -131,20 +134,21 @@
   </div>
 
   <!-- TRAINING -->
-  <div id="training" class="tab hidden">
+  <div id="training" class="tab">
     <h2>🏋️ Training Centre</h2>
 
-    <button onclick="train('pace')">Speed Training</button>
-    <button onclick="train('shoot')">Finishing</button>
-    <button onclick="train('pass')">Passing</button>
-    <button onclick="train('fit')">Fitness</button>
+    <button onclick="train('pace')">Speed Drills</button>
+    <button onclick="train('shoot')">Finishing Drills</button>
+    <button onclick="train('pass')">Passing Drills</button>
+    <button onclick="train('fit')">Endurance</button>
 
-    <p>Each choice improves specific attributes but reduces condition</p>
+    <p>Training improves stats but reduces condition and increases injury risk</p>
   </div>
 
   <!-- FIXTURES -->
-  <div id="fixtures" class="tab hidden">
-    <h2>⚽ Upcoming Fixtures</h2>
+  <div id="fixtures" class="tab">
+    <h2>⚽ Fixtures</h2>
+
     <div id="fixtureList"></div>
 
     <button onclick="playMatch()">Play Next Match</button>
@@ -154,18 +158,21 @@
   </div>
 
   <!-- LEAGUE -->
-  <div id="league" class="tab hidden">
+  <div id="league" class="tab">
     <h2>🏆 League Table</h2>
+
     <table>
       <thead>
-        <tr><th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th></tr>
+        <tr>
+          <th>Team</th><th>P</th><th>W</th><th>L</th><th>Pts</th>
+        </tr>
       </thead>
       <tbody id="table"></tbody>
     </table>
   </div>
 
-  <!-- JOBS -->
-  <div id="jobs" class="tab hidden">
+  <!-- CONTRACTS -->
+  <div id="contracts" class="tab">
     <h2>💼 Contract Offers</h2>
     <div id="offers"></div>
   </div>
@@ -176,15 +183,18 @@
 
 <script>
 
-/* ---------------- STATE ---------------- */
+/* ---------------- CORE STATE ---------------- */
 
 let game = {
   name:"",
   club:"Manchester United",
 
-  rating:60,
-  fatigue:100,
+  season:1,
+  week:1,
+
+  morale:50,
   form:0,
+  fatigue:100,
 
   stats:{
     pace:40,
@@ -201,7 +211,11 @@ let game = {
 /* ---------------- TEAMS ---------------- */
 
 function team(n){
-  return {name:n,p:0,w:0,l:0,pts:0};
+  return {
+    name:n,
+    p:0,w:0,l:0,pts:0,
+    strength:60+Math.random()*20
+  };
 }
 
 function initLeague(){
@@ -219,7 +233,7 @@ function initLeague(){
   generateFixtures();
 }
 
-/* ---------------- FIXTURES ---------------- */
+/* ---------------- FIXTURES SYSTEM ---------------- */
 
 function generateFixtures(){
   game.fixtures = [];
@@ -228,6 +242,15 @@ function generateFixtures(){
     for(let j=i+1;j<game.teams.length;j++){
       game.fixtures.push([game.teams[i],game.teams[j]]);
     }
+  }
+
+  shuffle(game.fixtures);
+}
+
+function shuffle(a){
+  for(let i=a.length-1;i>0;i--){
+    let j=Math.floor(Math.random()*i);
+    [a[i],a[j]]=[a[j],a[i]];
   }
 }
 
@@ -242,102 +265,139 @@ function start(){
   document.getElementById("intro").style.display="none";
   document.getElementById("game").style.display="block";
 
-  tab("home");
+  openTab("home");
   updateUI();
 }
 
 /* ---------------- TABS ---------------- */
 
-function tab(t){
-  document.querySelectorAll(".tab").forEach(x=>x.classList.add("hidden"));
-  document.getElementById(t).classList.remove("hidden");
+function openTab(t){
+  document.querySelectorAll(".tab").forEach(x=>x.style.display="none");
+  document.getElementById(t).style.display="block";
 
   if(t==="fixtures") showFixtures();
-  if(t==="jobs") showOffers();
+  if(t==="contracts") showOffers();
 }
 
 /* ---------------- TRAINING ---------------- */
 
 function train(type){
 
-  game.stats[type]+=1+Math.random()*2;
+  let gain = 1 + Math.random()*2;
+
+  game.stats[type]+=gain;
+
   game.fatigue-=8;
+  game.morale+=1;
 
   if(game.fatigue<0)game.fatigue=0;
 
-  game.rating = calcRating();
+  game.overall = calcOvr();
+
+  addFeed("🏋️ "+type+" improved +"+gain.toFixed(1));
 
   updateUI();
 }
 
-/* ---------------- RATING ---------------- */
+/* ---------------- OVERALL ---------------- */
 
-function calcRating(){
+function calcOvr(){
   let s=game.stats;
   return ((s.pace+s.shoot+s.pass+s.fit)/4).toFixed(1);
 }
 
-/* ---------------- MATCH ---------------- */
+/* ---------------- MATCH ENGINE ---------------- */
 
 function playMatch(){
 
   let match=game.fixtures.shift();
-  if(!match) return addFeed("Season finished!");
+  if(!match) return addFeed("Season complete!");
 
   let [a,b]=match;
 
-  let yourPower=game.rating*1 + game.form - (game.fatigue<40?10:0);
-  let oppPower=60+Math.random()*40;
+  let playerPower =
+    game.overall*1.2 +
+    game.form +
+    game.morale/10 -
+    (game.fatigue<40?10:0);
 
-  let you=0,them=0;
+  let teamA = a.strength;
+  let teamB = b.strength;
 
-  let feed=["⚽ "+a.name+" vs "+b.name];
+  let scoreA=0,scoreB=0;
+
+  let feed=[`⚽ ${a.name} vs ${b.name}`];
 
   for(let i=0;i<6;i++){
+
     let r=Math.random()*100;
 
-    if(r<yourPower/2){you++;feed.push("🔥 GOAL "+a.name);}
-    if(r<oppPower/2.5){them++;feed.push("💥 GOAL "+b.name);}
+    if(r<playerPower/3){scoreA++;feed.push("🔥 "+a.name+" scores");}
+    if(r<teamB/4){scoreB++;feed.push("💥 "+b.name+" scores");}
   }
 
-  if(you>them){
+  if(scoreA>scoreB){
     a.w++;a.pts+=3;
-    feed.push("🏆 "+a.name+" wins");
+    game.form+=2;
+    feed.push("🏆 "+a.name+" WIN");
   } else {
     b.w++;b.pts+=3;
-    feed.push("🏆 "+b.name+" wins");
+    game.form-=2;
+    feed.push("🏆 "+b.name+" WIN");
   }
 
   game.fatigue-=12;
+  game.week++;
 
-  generateJobOffers();
+  if(game.week>10) endSeason();
 
-  document.getElementById("feed").innerHTML=feed.map(f=>"<p>"+f+"</p>").join("");
+  generateContracts();
+
+  document.getElementById("feed").innerHTML=
+    feed.map(x=>"<p>"+x+"</p>").join("");
 
   updateUI();
   showFixtures();
+}
+
+/* ---------------- SEASON ---------------- */
+
+function endSeason(){
+
+  let champ=[...game.teams].sort((a,b)=>b.pts-a.pts)[0];
+
+  addFeed("🏆 SEASON WINNER: "+champ.name);
+
+  game.season++;
+  game.week=1;
+
+  game.teams.forEach(t=>{
+    t.p=0;t.w=0;t.l=0;t.pts=0;
+  });
+
+  generateFixtures();
 }
 
 /* ---------------- FIXTURES UI ---------------- */
 
 function showFixtures(){
   document.getElementById("fixtureList").innerHTML =
-    game.fixtures.slice(0,10).map(f=>
-      "<p>"+f[0].name+" vs "+f[1].name+"</p>"
-    ).join("");
+    game.fixtures.slice(0,8)
+      .map(f=>`<p>${f[0].name} vs ${f[1].name}</p>`)
+      .join("");
 }
 
-/* ---------------- JOBS + CONTRACTS ---------------- */
+/* ---------------- CONTRACT SYSTEM ---------------- */
 
-function generateJobOffers(){
+function generateContracts(){
 
   if(Math.random()>0.6){
 
     let clubs=[
-      {name:"Arsenal",wage:200,morale:10},
-      {name:"Liverpool",wage:250,morale:15},
-      {name:"Chelsea",wage:300,morale:20},
-      {name:"Man City",wage:500,morale:30}
+      {name:"Arsenal",wage:200,bonus:50},
+      {name:"Liverpool",wage:300,bonus:80},
+      {name:"Chelsea",wage:350,bonus:100},
+      {name:"Man City",wage:600,bonus:150}
     ];
 
     game.offers.push(clubs[Math.random()*clubs.length|0]);
@@ -348,18 +408,24 @@ function showOffers(){
 
   let html="";
 
+  if(game.offers.length===0){
+    html="<p>No offers yet</p>";
+  }
+
   game.offers.forEach((o,i)=>{
     html+=`
-      <p>
-        ${o.name} - £${o.wage}
+      <div class="panel">
+        <p>${o.name}</p>
+        <p>Wage: £${o.wage}</p>
+        <p>Bonus: £${o.bonus}</p>
+
         <button onclick="accept(${i})">Accept</button>
         <button onclick="negotiate(${i})">Negotiate</button>
-      </p>
+      </div>
     `;
   });
 
-  document.getElementById("offers").innerHTML=
-    html || "<p>No offers</p>";
+  document.getElementById("offers").innerHTML=html;
 }
 
 function accept(i){
@@ -369,8 +435,16 @@ function accept(i){
 }
 
 function negotiate(i){
-  game.offers[i].wage += 50;
+  game.offers[i].wage+=50;
+  game.offers[i].bonus+=20;
   showOffers();
+}
+
+/* ---------------- FEED ---------------- */
+
+function addFeed(t){
+  document.getElementById("feed").innerHTML=
+    "<p>"+t+"</p>"+document.getElementById("feed").innerHTML;
 }
 
 /* ---------------- UI ---------------- */
@@ -378,14 +452,19 @@ function negotiate(i){
 function updateUI(){
 
   document.getElementById("homeInfo").innerText=
-    game.name+" | "+game.club+" | Rating "+game.rating;
+    game.name+" | "+game.club;
+
+  document.getElementById("season").innerText=game.season;
+  document.getElementById("week").innerText=game.week;
 
   document.getElementById("pname").innerText=game.name;
   document.getElementById("club").innerText=game.club;
-  document.getElementById("rating").innerText=game.rating;
 
-  document.getElementById("fatigue").innerText=game.fatigue;
+  document.getElementById("fatigue").innerText=game.fatigue.toFixed(0);
+  document.getElementById("morale").innerText=game.morale;
   document.getElementById("form").innerText=game.form;
+
+  document.getElementById("ovr").innerText=calcOvr();
 
   let s=game.stats;
 
@@ -408,13 +487,6 @@ function updateUI(){
   });
 
   document.getElementById("table").innerHTML=table;
-}
-
-/* ---------------- FEED ---------------- */
-
-function addFeed(t){
-  document.getElementById("feed").innerHTML=
-    "<p>"+t+"</p>"+document.getElementById("feed").innerHTML;
 }
 
 </script>
