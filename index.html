@@ -31,8 +31,7 @@
     .start { background: #00c853; }
     .train { background: #00c853; }
     .match { background: #ff9800; }
-    .save { background: #2979ff; }
-    .reset { background: #ff3d00; }
+    .offer { background: #9c27b0; }
 
     .grid {
       display: grid;
@@ -71,11 +70,11 @@
       text-align: left;
     }
 
-    input, select {
+    #offers {
+      background: #111a33;
       padding: 10px;
-      border-radius: 8px;
-      border: none;
-      margin: 5px;
+      margin-top: 10px;
+      border-radius: 10px;
     }
   </style>
 </head>
@@ -87,8 +86,6 @@
   <!-- INTRO -->
   <div id="intro">
     <h1>⚽ Football Career Simulator</h1>
-
-    <h3>Create Your Player</h3>
 
     <input id="playerName" placeholder="Name">
 
@@ -110,55 +107,28 @@
 
     <h1>⚽ Career Mode</h1>
 
-    <h2>👤 Player</h2>
     <p>Name: <span id="name"></span></p>
-    <p>Position: <span id="pos"></span></p>
-    <p>Age: <span id="age"></span></p>
     <p>Club: <span id="club"></span></p>
-    <p>Money: £<span id="money"></span></p>
     <p>Reputation: <span id="rep"></span></p>
-    <p>Week: <span id="week"></span>/10</p>
+    <p>Wage: £<span id="wage"></span>/match</p>
 
-    <p>⚡ Fatigue: <span id="fatigue"></span></p>
-    <p>📈 Form: <span id="form"></span></p>
-
-    <hr>
-
-    <h2>📊 Stats</h2>
-    <div class="grid">
-      <div class="card">⚡ Pace: <span id="pace"></span></div>
-      <div class="card">🎯 Shooting: <span id="shoot"></span></div>
-      <div class="card">🎮 Passing: <span id="pass"></span></div>
-      <div class="card">💪 Fitness: <span id="fit"></span></div>
-    </div>
+    <p>Fatigue: <span id="fatigue"></span></p>
+    <p>Form: <span id="form"></span></p>
 
     <hr>
 
     <button class="train" onclick="train()">Train</button>
     <button class="match" onclick="playMatch()">Play Match</button>
-    <button class="save" onclick="saveGame()">Save</button>
-    <button class="reset" onclick="resetGame()">Reset</button>
+    <button class="offer" onclick="checkOffers()">Check Offers</button>
 
     <hr>
 
-    <h2>📺 Live Commentary</h2>
+    <div id="offers"></div>
+
+    <hr>
+
+    <h2>📺 Match Feed</h2>
     <div id="commentary"></div>
-
-    <hr>
-
-    <h2>🏆 League</h2>
-    <table>
-      <thead>
-        <tr>
-          <th>Team</th>
-          <th>P</th>
-          <th>W</th>
-          <th>L</th>
-          <th>Pts</th>
-        </tr>
-      </thead>
-      <tbody id="table"></tbody>
-    </table>
 
   </div>
 
@@ -166,48 +136,29 @@
 
 <script>
 
-/* ---------------- GAME STATE ---------------- */
+/* ---------------- STATE ---------------- */
 
 let game = {
   started: false,
   name: "",
   position: "",
-  age: 16,
-  club: "You FC",
-  money: 0,
-  rep: 0,
-  week: 1,
+  club: "Manchester United",
 
+  rep: 0,
   fatigue: 100,
   form: 0,
-  formHistory: [],
+
+  wage: 100,
+
+  offers: [],
 
   stats: {
     pace: 30,
     shoot: 30,
     pass: 30,
     fit: 50
-  },
-
-  teams: []
+  }
 };
-
-/* ---------------- DEFAULT ---------------- */
-
-function createTeam(name) {
-  return { name, played: 0, wins: 0, losses: 0, points: 0 };
-}
-
-function initLeague() {
-  game.teams = [
-    createTeam("You FC"),
-    createTeam("North Town"),
-    createTeam("City Rovers"),
-    createTeam("Albion FC"),
-    createTeam("West United"),
-    createTeam("Rangers City")
-  ];
-}
 
 /* ---------------- START ---------------- */
 
@@ -216,20 +167,15 @@ function startGame() {
   let name = document.getElementById("playerName").value;
   let pos = document.getElementById("position").value;
 
-  if (!name) return alert("Enter a name!");
+  if (!name) return alert("Enter name");
 
-  game = {
-    ...game,
-    started: true,
-    name: name,
-    position: pos
-  };
+  game.started = true;
+  game.name = name;
+  game.position = pos;
 
   if (pos === "striker") game.stats.shoot += 10;
   if (pos === "midfielder") game.stats.pass += 10;
   if (pos === "defender") game.stats.fit += 10;
-
-  initLeague();
 
   document.getElementById("intro").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -241,16 +187,14 @@ function startGame() {
 
 function train() {
 
-  let stat = ["pace", "shoot", "pass"][Math.floor(Math.random() * 3)];
+  let stat = ["pace","shoot","pass"][Math.random()*3|0];
 
-  game.stats[stat] += Math.floor(Math.random() * 3) + 1;
+  game.stats[stat] += 1 + Math.random()*2;
 
   game.fatigue -= 10;
   if (game.fatigue < 0) game.fatigue = 0;
 
-  game.age += 0.1;
-
-  addComment("🏋️ Training improved " + stat);
+  game.rep += 1;
 
   updateUI();
 }
@@ -259,99 +203,106 @@ function train() {
 
 function playMatch() {
 
-  let opp = game.teams[Math.floor(Math.random() * game.teams.length)];
-  let you = game.teams.find(t => t.name === game.club);
-
-  let fatiguePenalty = game.fatigue < 40 ? -20 : 0;
-  let formBoost = game.form;
-
-  let yourPower =
+  let power =
     game.stats.pace +
     game.stats.shoot +
     game.stats.pass +
     game.stats.fit +
     game.rep +
-    formBoost +
-    fatiguePenalty;
+    game.form -
+    (game.fatigue < 40 ? 20 : 0);
 
-  let oppPower = 140 + Math.random() * 90;
+  let opponent = 150 + Math.random()*90;
 
-  you.played++;
-  opp.played++;
-
-  game.age += 0.2;
   game.fatigue -= 15;
-
   if (game.fatigue < 0) game.fatigue = 0;
 
-  let result;
+  let win = power > opponent;
 
-  if (yourPower > oppPower) {
-    you.wins++;
-    you.points += 3;
-    opp.losses++;
-    game.money += 300;
+  if (win) {
     game.rep += 5;
     game.form += 2;
-    game.formHistory.push(1);
-    addComment("🏆 Won vs " + opp.name);
-    result = "win";
+    addFeed("🏆 Great performance!");
   } else {
-    you.losses++;
-    opp.wins++;
-    opp.points += 3;
     game.rep += 1;
     game.form -= 2;
-    game.formHistory.push(-1);
-    addComment("😓 Lost vs " + opp.name);
-    result = "loss";
+    addFeed("😓 Tough match...");
   }
 
-  if (game.formHistory.length > 5) game.formHistory.shift();
   game.form = Math.max(-10, Math.min(10, game.form));
 
-  game.week++;
-  if (game.week > 10) endSeason();
+  maybeOffer();
 
-  liveCommentary(result);
   updateUI();
 }
 
-/* ---------------- COMMENTARY ---------------- */
+/* ---------------- REAL CLUBS ---------------- */
 
-function liveCommentary(result) {
+function maybeOffer() {
 
-  let lines = [
-    "Kick-off!",
-    "Midfield battle...",
-    "Pressure building...",
-    "Chance created!",
-    "Shot on goal!"
-  ];
+  if (Math.random() > 0.6) {
 
-  lines.push(result === "win"
-    ? "GOAL!!! YOU WIN!"
-    : "Full time... defeat.");
+    let clubs = [
+      { name:"Liverpool", rep: 15, wage: 150 },
+      { name:"Arsenal", rep: 20, wage: 180 },
+      { name:"Chelsea", rep: 25, wage: 220 },
+      { name:"Manchester City", rep: 30, wage: 300 },
+      { name:"Real Madrid", rep: 40, wage: 500 },
+      { name:"Barcelona", rep: 35, wage: 450 },
+      { name:"Bayern Munich", rep: 35, wage: 420 },
+      { name:"PSG", rep: 30, wage: 400 }
+    ];
 
-  let html = "";
-  lines.forEach(l => html += `<p>⚽ ${l}</p>`);
+    let offer = clubs[Math.floor(Math.random()*clubs.length)];
 
-  document.getElementById("commentary").innerHTML = html;
+    if (game.rep >= offer.rep - 10) {
+      game.offers.push(offer);
+      addFeed("📩 Offer from " + offer.name);
+    }
+  }
 }
 
-/* ---------------- SEASON ---------------- */
+/* ---------------- OFFERS ---------------- */
 
-function endSeason() {
-  addComment("🏁 Season finished!");
+function checkOffers() {
 
-  game.teams.forEach(t => {
-    t.played = 0;
-    t.wins = 0;
-    t.losses = 0;
-    t.points = 0;
+  let html = "<h3>📩 Transfer Offers</h3>";
+
+  if (game.offers.length === 0) {
+    html += "<p>No offers yet</p>";
+  }
+
+  game.offers.forEach((o,i) => {
+    html += `
+      <p>
+        ${o.name} - £${o.wage}
+        <button onclick="accept(${i})">Join</button>
+      </p>
+    `;
   });
 
-  game.week = 1;
+  document.getElementById("offers").innerHTML = html;
+}
+
+function accept(i) {
+
+  let offer = game.offers[i];
+
+  game.club = offer.name;
+  game.wage = offer.wage;
+
+  game.offers = [];
+
+  addFeed("✍️ Signed for " + offer.name);
+
+  updateUI();
+}
+
+/* ---------------- FEED ---------------- */
+
+function addFeed(t) {
+  document.getElementById("commentary").innerHTML =
+    `<p>${t}</p>` + document.getElementById("commentary").innerHTML;
 }
 
 /* ---------------- UI ---------------- */
@@ -359,40 +310,11 @@ function endSeason() {
 function updateUI() {
 
   document.getElementById("name").innerText = game.name;
-  document.getElementById("pos").innerText = game.position;
-
-  document.getElementById("age").innerText = game.age.toFixed(1);
   document.getElementById("club").innerText = game.club;
-  document.getElementById("money").innerText = game.money;
   document.getElementById("rep").innerText = game.rep;
-  document.getElementById("week").innerText = game.week;
-
+  document.getElementById("wage").innerText = game.wage;
   document.getElementById("fatigue").innerText = game.fatigue;
   document.getElementById("form").innerText = game.form;
-
-  document.getElementById("pace").innerText = game.stats.pace;
-  document.getElementById("shoot").innerText = game.stats.shoot;
-  document.getElementById("pass").innerText = game.stats.pass;
-  document.getElementById("fit").innerText = game.stats.fit;
-
-  let html = "";
-  game.teams.forEach(t => {
-    html += `<tr>
-      <td>${t.name}</td>
-      <td>${t.played}</td>
-      <td>${t.wins}</td>
-      <td>${t.losses}</td>
-      <td>${t.points}</td>
-    </tr>`;
-  });
-
-  document.getElementById("table").innerHTML = html;
-}
-
-/* ---------------- SIMPLE LOG ---------------- */
-
-function addComment(text) {
-  document.getElementById("commentary").innerHTML = `<p>${text}</p>` + document.getElementById("commentary").innerHTML;
 }
 
 </script>
