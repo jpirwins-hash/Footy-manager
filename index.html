@@ -12,7 +12,7 @@
     }
 
     .box {
-      max-width: 800px;
+      max-width: 950px;
       margin: auto;
       background: #151b2d;
       padding: 20px;
@@ -32,28 +32,43 @@
     .save { background: #2979ff; }
     .reset { background: #ff3d00; }
 
-    .offer {
-      background: #222c44;
-      padding: 15px;
-      border-radius: 10px;
-      margin-top: 10px;
-      display: none;
-    }
-
-    .accept { background: #00c853; }
-    .reject { background: #ff3d00; }
-
-    .stats {
+    .grid {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
-      margin-top: 10px;
     }
 
     .card {
       background: #1f2942;
       padding: 10px;
       border-radius: 10px;
+    }
+
+    table {
+      width: 100%;
+      margin-top: 10px;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      border: 1px solid #333;
+      padding: 6px;
+    }
+
+    th {
+      background: #222c44;
+    }
+
+    #commentary {
+      background: #0f1629;
+      padding: 10px;
+      border-radius: 10px;
+      min-height: 120px;
+      text-align: left;
+    }
+
+    #log {
+      text-align: left;
     }
   </style>
 </head>
@@ -64,16 +79,17 @@
 
   <h1>⚽ Football Career Simulator</h1>
 
-  <h2>👤 Player Profile</h2>
+  <h2>👤 Player</h2>
   <p>Age: <span id="age"></span></p>
   <p>Club: <span id="club"></span></p>
   <p>Money: £<span id="money"></span></p>
   <p>Reputation: <span id="rep"></span></p>
+  <p>Season Week: <span id="week"></span> / 10</p>
 
   <hr>
 
   <h2>📊 Stats</h2>
-  <div class="stats">
+  <div class="grid">
     <div class="card">⚡ Pace: <span id="pace"></span></div>
     <div class="card">🎯 Shooting: <span id="shoot"></span></div>
     <div class="card">🎮 Passing: <span id="pass"></span></div>
@@ -82,8 +98,6 @@
 
   <hr>
 
-  <h2>🎮 Actions</h2>
-
   <button class="train" onclick="train()">Train</button>
   <button class="match" onclick="playMatch()">Play Match</button>
   <button class="save" onclick="saveGame()">Save</button>
@@ -91,12 +105,24 @@
 
   <hr>
 
-  <div id="offerBox" class="offer">
-    <h2>📩 Transfer Offer</h2>
-    <p id="offerText"></p>
-    <button class="accept" onclick="acceptOffer()">Accept</button>
-    <button class="reject" onclick="rejectOffer()">Reject</button>
-  </div>
+  <h2>📺 Live Match Commentary</h2>
+  <div id="commentary"></div>
+
+  <hr>
+
+  <h2>🏆 League Table</h2>
+  <table>
+    <thead>
+      <tr>
+        <th>Team</th>
+        <th>P</th>
+        <th>W</th>
+        <th>L</th>
+        <th>Pts</th>
+      </tr>
+    </thead>
+    <tbody id="table"></tbody>
+  </table>
 
   <hr>
 
@@ -113,9 +139,10 @@
 
 let game = {
   age: 16,
-  club: "Youth Academy",
+  club: "You FC",
   money: 0,
   rep: 0,
+  week: 1,
 
   stats: {
     pace: 30,
@@ -124,102 +151,164 @@ let game = {
     fit: 50
   },
 
-  log: [],
-  offer: null
+  teams: [],
+  log: []
 };
+
+/* -----------------------
+   LEAGUE INIT
+------------------------*/
+
+function createTeam(name) {
+  return {
+    name,
+    played: 0,
+    wins: 0,
+    losses: 0,
+    points: 0
+  };
+}
+
+function initLeague() {
+  game.teams = [
+    createTeam("You FC"),
+    createTeam("North Town"),
+    createTeam("City Rovers"),
+    createTeam("Albion FC"),
+    createTeam("West United"),
+    createTeam("Rangers City")
+  ];
+}
 
 /* -----------------------
    LOAD / SAVE
 ------------------------*/
+
 function loadGame() {
-  let save = localStorage.getItem("footballGame");
+  let save = localStorage.getItem("footballFull");
   if (save) game = JSON.parse(save);
+  else initLeague();
 }
 loadGame();
 
 function saveGame() {
-  localStorage.setItem("footballGame", JSON.stringify(game));
+  localStorage.setItem("footballFull", JSON.stringify(game));
   addLog("💾 Game saved");
 }
 
 function resetGame() {
-  localStorage.removeItem("footballGame");
+  localStorage.removeItem("footballFull");
   location.reload();
 }
 
 /* -----------------------
-   LOG SYSTEM
+   LOG
 ------------------------*/
+
 function addLog(text) {
   game.log.unshift(text);
-  if (game.log.length > 8) game.log.pop();
+  if (game.log.length > 10) game.log.pop();
 }
 
 /* -----------------------
    TRAINING
 ------------------------*/
+
 function train() {
   let stat = ["pace", "shoot", "pass"][Math.floor(Math.random() * 3)];
 
   game.stats[stat] += Math.floor(Math.random() * 3) + 1;
   game.stats.fit -= 2;
-
   game.age += 0.1;
 
-  addLog(`🏋️ Improved ${stat}`);
+  addLog(`🏋️ Training improved ${stat}`);
   updateUI();
 }
 
 /* -----------------------
-   MATCH SIMULATION
+   LIVE COMMENTARY
 ------------------------*/
+
+function liveCommentary(result) {
+  let comments = [];
+
+  let good = [
+    "Strong start from your team!",
+    "Great passing movement!",
+    "You're controlling possession!",
+    "Shot on target!"
+  ];
+
+  let bad = [
+    "You're under pressure!",
+    "Defensive mistake!",
+    "Opposition attacking!",
+    "Dangerous situation!"
+  ];
+
+  for (let i = 0; i < 6; i++) {
+    let pool = Math.random() > 0.5 ? good : bad;
+    comments.push(pool[Math.floor(Math.random() * pool.length)]);
+  }
+
+  comments.push(result === "win"
+    ? "GOAL!!! YOU WIN THE MATCH!"
+    : "Full time... tough loss.");
+
+  let html = "";
+  comments.forEach(c => {
+    html += `<p>⚽ ${c}</p>`;
+  });
+
+  document.getElementById("commentary").innerHTML = html;
+}
+
+/* -----------------------
+   MATCH SYSTEM
+------------------------*/
+
 function playMatch() {
-  let rating =
+
+  let opponents = game.teams.filter(t => t.name !== game.club);
+  let opponent = opponents[Math.floor(Math.random() * opponents.length)];
+
+  let you = game.teams.find(t => t.name === game.club);
+
+  let yourPower =
     game.stats.pace +
     game.stats.shoot +
     game.stats.pass +
-    game.stats.fit;
+    game.stats.fit +
+    game.rep;
 
-  let opponent = 120 + Math.random() * 80;
+  let oppPower = 150 + Math.random() * 80;
+
+  you.played++;
+  opponent.played++;
 
   game.age += 0.2;
 
-  if (rating > opponent) {
-    game.money += 500;
+  let result;
+
+  if (yourPower > oppPower) {
+    you.wins++;
+    you.points += 3;
+    opponent.losses++;
+    game.money += 300;
     game.rep += 5;
-    addLog("🏆 Won the match!");
+    addLog(`🏆 Beat ${opponent.name}`);
+    result = "win";
   } else {
+    you.losses++;
+    opponent.wins++;
+    opponent.points += 3;
     game.rep += 1;
-    addLog("😓 Lost the match...");
+    addLog(`😓 Lost to ${opponent.name}`);
+    result = "loss";
   }
 
-  checkTransferOffer();
-  levelUpCheck();
-  updateUI();
-}
+  game.week++;
 
-/* -----------------------
-   TRANSFER SYSTEM
-------------------------*/
-function checkTransferOffer() {
-  let chance = Math.random();
+  if (game.week > 10) endSeason();
 
-  if (chance > 0.6) {
-    let clubs = [
-      { name: "City Rovers", rep: 10, salary: 300 },
-      { name: "United Town", rep: 25, salary: 800 },
-      { name: "FC Albion", rep: 50, salary: 1500 },
-      { name: "Elite Stars", rep: 80, salary: 3000 }
-    ];
-
-    let offer = clubs[Math.floor(Math.random() * clubs.length)];
-
-    if (game.rep >= offer.rep) {
-      game.offer = offer;
-      showOffer();
-    }
-  }
-}
-
-/* -----------------------
-   OFFER
+  liveCommentary(result
