@@ -2,7 +2,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Football Career Mode - CAREER UPDATE</title>
+<title>Football Career Mode - FIFA DEPTH</title>
 <style>
 body{margin:0;font-family:system-ui,Arial;background:#050814;color:#fff}
 header{padding:14px;background:linear-gradient(90deg,#16a34a,#0ea5e9)}
@@ -12,7 +12,6 @@ h1{margin:0;font-size:20px}
 button{background:#16a34a;color:#fff;border:0;padding:10px;border-radius:10px;cursor:pointer;font-weight:700}
 button:hover{background:#22c55e}
 button.secondary{background:#334155}
-button.secondary:hover{background:#475569}
 select,input{padding:10px;border-radius:10px;background:#111827;color:#fff;border:1px solid #1f2937;width:100%}
 .flex{display:flex;gap:10px;flex-wrap:wrap}
 .tab{padding:8px 12px;background:#1f2937;border-radius:999px;cursor:pointer;font-size:12px}
@@ -23,162 +22,178 @@ select,input{padding:10px;border-radius:10px;background:#111827;color:#fff;borde
 .pitch{height:160px;background:linear-gradient(90deg,#14532d,#166534);border-radius:12px;position:relative;overflow:hidden}
 .ball{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;left:10px;top:80px;transition:all .5s linear}
 .commentary{height:120px;overflow:auto;font-size:12px;color:#cbd5e1;margin-top:8px}
+.bar{height:8px;background:#1f2937;border-radius:999px;overflow:hidden}
+.bar div{height:100%;background:#22c55e;width:0%}
 </style>
 </head>
 <body><header>
-<h1>⚽ CAREER MODE ULTRA</h1>
-<div class="small">Setup → Dashboard → Squad → Matches → Training → Contracts</div>
-</header><div class="container"><!-- SETUP SCREEN --><div id="setupScreen" class="card">
-<h2>Career Setup</h2>
-<p class="small">Create your player and wait for offers (no instant club start)</p><input id="playerName" placeholder="Player Name" /><div class="flex" style="margin-top:10px">
-<select id="leaguePick">
+<h1>⚽ FIFA CAREER MODE DEPTH</h1>
+<div class="small">Contracts • Reputation • Injuries • Objectives • Transfers • Season Simulation</div>
+</header><div class="container"><div id="setup" class="card">
+<h2>Start Career</h2>
+<input id="name" placeholder="Player Name" />
+<select id="league">
 <option value="spfl">Scotland</option>
 <option value="prem">England</option>
 <option value="laliga">Spain</option>
 <option value="bundes">Germany</option>
 </select>
-</div><button onclick="startCareer()" style="margin-top:10px">Start Career</button>
-
-</div><!-- DASHBOARD --><div id="dashboard" class="hidden"><div class="card">
-<h2 id="playerHeader">Player</h2>
+<button onclick="startCareer()">Begin Career</button>
+</div><div id="game" class="hidden"><div class="card">
+<h2 id="pname">Player</h2>
 <div class="flex">
 <div>OVR <div class="stat" id="ovr">65</div></div>
-<div>MOR <div class="stat" id="mor">80</div></div>
+<div>REP <div class="stat" id="rep">50</div></div>
 <div>FIT <div class="stat" id="fit">100</div></div>
+<div>MOR <div class="stat" id="mor">80</div></div>
 </div>
-</div><div class="card flex">
-<div class="tab active" onclick="openTab('dashboardTab')">Dashboard</div>
-<div class="tab" onclick="openTab('squadTab')">Squad</div>
-<div class="tab" onclick="openTab('matchTab')">Matches</div>
-<div class="tab" onclick="openTab('trainTab')">Training</div>
-<div class="tab" onclick="openTab('offerTab')">Job Offers</div>
-</div><!-- DASHBOARD TAB --><div id="dashboardTab" class="card">
-<h3>Team Overview</h3>
-<div id="teamInfo" class="small">No club yet - waiting for offers...</div>
-</div><!-- SQUAD TAB --><div id="squadTab" class="card hidden">
-<h3>Squad</h3>
-<div id="squadList" class="small"></div>
-</div><!-- MATCH TAB --><div id="matchTab" class="card hidden">
-<h3>Upcoming Match</h3>
-<div id="matchInfo" class="small">No fixtures yet</div>
-<div class="pitch"><div class="ball" id="ball"></div></div>
-<div class="commentary" id="log"></div>
+<div class="small">Week <span id="week">1</span> • Season <span id="season">1</span></div>
+</div><div class="card">
+<div class="flex">
+<div class="tab active" onclick="tab('dash')">Dashboard</div>
+<div class="tab" onclick="tab('squad')">Squad</div>
+<div class="tab" onclick="tab('match')">Matches</div>
+<div class="tab" onclick="tab('train')">Training</div>
+<div class="tab" onclick="tab('offer')">Offers</div>
+</div>
+</div><div id="dash" class="card">
+<h3>Club Status</h3>
+<div id="clubInfo">No club yet</div>
+<div id="objectives" class="small"></div>
+</div><div id="squad" class="card hidden">
+<h3>Squad Competition</h3>
+<div id="squadList"></div>
+</div><div id="match" class="card hidden">
+<h3>Match Engine</h3>
 <button onclick="playMatch()">Simulate Match</button>
-</div><!-- TRAINING TAB --><div id="trainTab" class="card hidden">
+<div class="pitch"><div class="ball" id="ball"></div></div>
+<div id="log" class="commentary"></div>
+</div><div id="train" class="card hidden">
 <h3>Training</h3>
-<div class="card">
-<b>Finishing Drills</b><br><span class="small">Improve shooting & composure</span>
-<button onclick="train('shoot')">Train</button>
-</div>
-<div class="card">
-<b>Fitness</b><br><span class="small">Improve stamina & reduce fatigue</span>
-<button onclick="train('fit')">Train</button>
-</div>
-<div class="card">
-<b>Passing</b><br><span class="small">Improve vision & creativity</span>
-<button onclick="train('pass')">Train</button>
-</div>
-</div><!-- OFFERS TAB --><div id="offerTab" class="card hidden">
-<h3>Contract Offers</h3>
+<button onclick="train('shoot')">Finishing</button>
+<button onclick="train('fit')">Fitness</button>
+<button onclick="train('pass')">Passing</button>
+<div class="small">Training affects form, injury risk & OVR</div>
+</div><div id="offer" class="card hidden">
+<h3>Transfer Market</h3>
 <div id="offers"></div>
-</div></div></div><script>
+</div></div>
+</div><script>
 
-let player={name:"",ovr:65,mor:80,fit:100}
-let club=null
-let league=null
+let player={name:"",ovr:65,rep:50,fit:100,mor:80,week:1,season:1,club:null}
+let leagueData=null
 let squad=[]
 let offers=[]
-let currentTab="dashboardTab"
 
 const leagues={
-spfl:{name:"SPFL",clubs:[{name:"Rangers",players:["Tavernier","Cantwell","Danilo"]},{name:"Celtic",players:["Kyogo","McGregor","Hatate"]}]},
-prem:{name:"Premier League",clubs:[{name:"Man United",players:["Bruno","Rashford","Hojlund"]},{name:"Man City",players:["Haaland","De Bruyne","Foden"]}]},
-laliga:{name:"La Liga",clubs:[{name:"Real Madrid",players:["Bellingham","Vinicius","Rodrygo"]}]},
-bundes:{name:"Bundesliga",clubs:[{name:"Bayern",players:["Kane","Musiala","Kimmich"]}]}
+spfl:{name:"SPFL",clubs:[{name:"Rangers",ovr:78,players:["Tavernier","Cantwell","Danilo"]},{name:"Celtic",ovr:80,players:["Kyogo","McGregor","Hatate"]}]},
+prem:{name:"Premier League",clubs:[{name:"Man United",ovr:82,players:["Bruno","Rashford","Hojlund"]},{name:"Man City",ovr:88,players:["Haaland","De Bruyne","Foden"]}]},
+laliga:{name:"La Liga",clubs:[{name:"Real Madrid",ovr:89,players:["Bellingham","Vinicius","Rodrygo"]}]},
+bundes:{name:"Bundesliga",clubs:[{name:"Bayern",ovr:88,players:["Kane","Musiala","Kimmich"]}]}
 }
 
 function startCareer(){
-player.name=document.getElementById("playerName").value||"Player"
-let l=document.getElementById("leaguePick").value
-league=leagues[l]
+player.name=document.getElementById("name").value||"Player"
+leagueData=leagues[document.getElementById("league").value]
 
-// generate offers instead of joining instantly
-offers=[
-{club:league.clubs[0],wage:"£120k",role:"Rotation"},
-{club:league.clubs[1],wage:"£180k",role:"Important"}
-]
+offers=generateOffers()
 
-showDashboard()
+show()
 renderOffers()
+updateUI()
 }
 
-function showDashboard(){
-document.getElementById("setupScreen").classList.add("hidden")
-document.getElementById("dashboard").classList.remove("hidden")
-document.getElementById("playerHeader").innerText=player.name
+function generateOffers(){
+return leagueData.clubs.map(c=>({club:c,wage:"£"+(100+Math.floor(Math.random()*300))+"k",role:Math.random()>0.5?"Important":"Rotation",repReq:c.ovr-5}))
 }
 
 function acceptOffer(i){
-club=offers[i].club
-squad=club.players
+player.club=offers[i].club
+squad=player.club.players
 offers=[]
-document.getElementById("teamInfo").innerText="Club: "+club.name
-renderSquad()
-renderMatch()
-renderOffers()
+player.rep+=10
+updateClub()
 }
 
-function renderSquad(){
+function updateClub(){
+document.getElementById("clubInfo").innerText="Club: "+player.club.name+" (OVR " + player.club.ovr + ")"
 document.getElementById("squadList").innerHTML=squad.map(p=>"• "+p).join("<br>")
+renderObjectives()
 }
 
-function renderMatch(){
-if(!club)return
-document.getElementById("matchInfo").innerText="Next match: " + club.name + " vs Rival FC"
+function renderObjectives(){
+document.getElementById("objectives").innerHTML="Objectives: Score 10 goals, maintain rating 7+, avoid injury risk"
 }
 
-function renderOffers(){
-document.getElementById("offers").innerHTML=offers.map((o,i)=>`
-<div class='card'>
-<b>${o.club.name}</b><br>
-Role: ${o.role}<br>
-Wage: ${o.wage}<br>
-<button onclick='acceptOffer(${i})'>Negotiate & Accept</button>
-</div>
-`).join("")
-}
-
-function openTab(tab){
-let tabs=["dashboardTab","squadTab","matchTab","trainTab","offerTab"]
-tabs.forEach(t=>document.getElementById(t).classList.add("hidden"))
-document.getElementById(tab).classList.remove("hidden")
+function tab(t){
+["dash","squad","match","train","offer"].forEach(x=>document.getElementById(x).classList.add("hidden"))
+document.getElementById(t).classList.remove("hidden")
 }
 
 function log(t){document.getElementById("log").innerHTML+="<br>• "+t}
 
 function moveBall(x){document.getElementById("ball").style.left=x+"%"}
 
-function playMatch(){
-if(!club)return
-log("Kickoff vs "+club.name)
-let timeline=[10,20,30,40,50,60,70,80,90]
+function train(type){
+if(type=="shoot")player.ovr+=0.5
+if(type=="fit")player.fit+=5
+if(type=="pass")player.ovr+=0.2
+player.mor+=1
+player.rep+=1
+}
 
-timeline.forEach((m,i)=>{
+function playMatch(){
+if(!player.club)return
+let events=[10,20,30,40,50,60,70,80,90]
+log("Kickoff vs " + player.club.name)
+let goals=0
+
+events.forEach((m,i)=>{
 setTimeout(()=>{
 moveBall(Math.random()*100)
 let r=Math.random()
-if(r>0.85)log(m+" GOAL!!!")
-else if(r>0.5)log(m+" shot")
-else log(m+" play")
-},i*600)
+if(r>0.9){log(m+" GOAL!!!");goals++;player.rep+=5}
+else if(r>0.6){log(m+" shot")}
+else if(r>0.3){log(m+" build up")}
+else{log(m+" defending")}
+},i*500)
 })
+
+setTimeout(()=>{
+player.ovr+=0.2
+player.week++
+if(player.week>38){player.week=1;player.season++}
+updateUI()
+log("Full time goals: "+goals)
+maybeInjury()
+generateNewOffers()
+},6000)
 }
 
-function train(type){
-if(type=="shoot")player.ovr++
-if(type=="fit")player.fit+=5
-if(type=="pass")player.ovr+=0.5
-player.mor+=1
+function maybeInjury(){
+if(Math.random()<0.1){player.fit-=20;player.mor-=10;log("⚠ Injury sustained! Recovery needed")}
+}
+
+function generateNewOffers(){
+if(Math.random()<0.4){offers=generateOffers();renderOffers()}
+}
+
+function renderOffers(){
+document.getElementById("offers").innerHTML=
+offers.map((o,i)=>`<div class='card'><b>${o.club.name}</b><br>Role: ${o.role}<br>Wage: ${o.wage}<br><button onclick='acceptOffer(${i})'>Negotiate</button></div>`).join("")
+}
+
+function show(){
+document.getElementById("setup").classList.add("hidden")
+document.getElementById("game").classList.remove("hidden")
+document.getElementById("pname").innerText=player.name
+}
+
+function updateUI(){
+document.getElementById("ovr").innerText=Math.floor(player.ovr)
+document.getElementById("rep").innerText=player.rep
+document.getElementById("fit").innerText=player.fit
+document.getElementById("mor").innerText=player.mor
 }
 
 </script></body>
