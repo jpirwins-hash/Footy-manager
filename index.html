@@ -1,261 +1,643 @@
-body{ margin:0; font-family:Arial; background:radial-gradient(circle at top,#0b1228,#050814); color:white; }
-
-header{ background:linear-gradient(90deg,#16a34a,#0ea5e9); padding:15px; font-weight:bold; }
-
-.container{ padding:15px; max-width:1000px; margin:auto; }
-
-.card{ background:rgba(15,23,42,0.75); padding:15px; border-radius:16px; margin-top:15px; backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); }
-
-button{ background:#22c55e; border:0; padding:10px 14px; border-radius:10px; color:white; font-weight:bold; cursor:pointer; }
-
-button:hover{transform:scale(1.05)}
-
-a{color:white;text-decoration:none}
-
-nav{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
-
-nav a{ background:rgba(255,255,255,0.08); padding:8px 12px; border-radius:999px; }
-
-nav a:hover{background:rgba(34,197,94,0.3)}
-
-
----
-
-=========================
-
-⚙️ game.js (CORE LOGIC)
-
-=========================
-
-let player = JSON.parse(localStorage.getItem("player")) || { name:"Player", ovr:65, rep:50, fit:100, mor:80, week:1, season:1, club:"" };
-
-function save(){ localStorage.setItem("player",JSON.stringify(player)); }
-
-function train(type){ if(type=="shoot")player.ovr+=0.5; if(type=="pass")player.ovr+=0.3; if(type=="fit")player.fit+=5; player.rep+=1; save(); alert("Training complete!"); }
-
-function simulateMatch(){ let goals = Math.floor(Math.random()*4); player.week++; if(player.week>38){player.week=1;player.season++;} save(); alert("Match finished! Goals: "+goals); }
-
-
----
-
-=========================
-
-🏠 index.html (START CAREER)
-
-=========================
-
-<!DOCTYPE html><html>
+<!DOCTYPE html><html lang="en">
 <head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>⚽ CAREER MODE</header>
-<div class="container"><div class="card">
-<h2>Start Your Career</h2>
-<input id="name" placeholder="Enter Name">
-<br><br>
-<select id="league">
-<option>England</option>
-<option>Scotland</option>
-<option>Spain</option>
-</select>
-<br><br>
-<button onclick="start()">Begin</button>
-</div></div><script>
-function start(){
-let name=document.getElementById("name").value;
-localStorage.setItem("player",JSON.stringify({name:name,ovr:65,rep:50,fit:100,mor:80,week:1,season:1}));
-window.location="dashboard.html";
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Ultimate Football Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      background: #020617;
+      color: white;
+      font-family: Arial, sans-serif;
+      overflow-x: hidden;
+    }canvas {
+  width: 100%;
+  height: auto;
+  border-radius: 16px;
+  background: #14532d;
+  border: 2px solid #1e293b;
 }
+
+.card {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 16px;
+  padding: 16px;
+}
+
+.nav-btn {
+  padding: 12px;
+  border-radius: 12px;
+  background: #1e293b;
+  transition: 0.2s;
+}
+
+.nav-btn:hover {
+  background: #334155;
+}
+
+.player-card {
+  background: #111827;
+  border: 1px solid #374151;
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 10px;
+}
+
+.stat-bar {
+  height: 8px;
+  border-radius: 999px;
+  background: #1e293b;
+  overflow: hidden;
+}
+
+.stat-fill {
+  height: 100%;
+  background: #22c55e;
+}
+
+.hidden-screen {
+  display: none;
+}
+
+  </style>
+</head>
+<body><div class="min-h-screen p-4 pb-24">  <header class="mb-6">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-3xl font-bold">Ultimate Football Manager</h1>
+        <p class="text-slate-400">Living Football Universe Prototype</p>
+      </div>
+      <div class="text-right">
+        <div id="money" class="font-bold text-green-400">£50M</div>
+        <div id="season">Season 2026/27</div>
+      </div>
+    </div>
+  </header>  <section id="dashboard-screen"><div class="grid grid-cols-2 gap-4 mb-6">
+  <div class="card">
+    <div class="text-slate-400">Club</div>
+    <div class="text-xl font-bold">Aberdeen FC</div>
+  </div>
+
+  <div class="card">
+    <div class="text-slate-400">League Position</div>
+    <div class="text-xl font-bold">3rd</div>
+  </div>
+
+  <div class="card">
+    <div class="text-slate-400">Fan Happiness</div>
+    <div class="text-xl font-bold text-green-400">Very Happy</div>
+  </div>
+
+  <div class="card">
+    <div class="text-slate-400">Board Confidence</div>
+    <div class="text-xl font-bold text-yellow-400">Stable</div>
+  </div>
+</div>
+
+<div class="card mb-6">
+  <div class="flex justify-between items-center mb-3">
+    <h2 class="text-xl font-bold">Next Match</h2>
+    <button onclick="playMatch()" class="bg-green-600 px-4 py-2 rounded-xl">
+      Play Match
+    </button>
+  </div>
+
+  <div class="text-lg">Aberdeen vs Celtic</div>
+  <div class="text-slate-400">Scottish Premiership</div>
+</div>
+
+<div class="card mb-6">
+  <h2 class="text-xl font-bold mb-4">League Table</h2>
+
+  <div class="space-y-2">
+    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
+      <span>1. Celtic</span>
+      <span>76 pts</span>
+    </div>
+
+    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
+      <span>2. Rangers</span>
+      <span>71 pts</span>
+    </div>
+
+    <div class="flex justify-between bg-red-900 p-2 rounded-lg">
+      <span>3. Aberdeen</span>
+      <span>63 pts</span>
+    </div>
+
+    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
+      <span>4. Hearts</span>
+      <span>57 pts</span>
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h2 class="text-xl font-bold mb-4">Football News</h2>
+
+  <div id="news-feed" class="space-y-3">
+    <div class="bg-slate-800 p-3 rounded-lg">
+      Celtic reportedly scouting Dutch wonderkid.
+    </div>
+
+    <div class="bg-slate-800 p-3 rounded-lg">
+      Aberdeen fans delighted with recent form.
+    </div>
+
+    <div class="bg-slate-800 p-3 rounded-lg">
+      Rangers sack assistant manager after poor results.
+    </div>
+  </div>
+</div>
+
+  </section>  <section id="squad-screen" class="hidden-screen">
+    <div class="card mb-4">
+      <h2 class="text-2xl font-bold mb-2">First Team Squad</h2>
+      <p class="text-slate-400">Manage player morale, form and development.</p>
+    </div><div id="players-container"></div>
+
+  </section>  <section id="tactics-screen" class="hidden-screen">
+    <div class="card mb-4">
+      <h2 class="text-2xl font-bold mb-4">Tactics</h2><div class="space-y-4">
+    <div>
+      <label>Formation</label>
+      <select id="formation" class="w-full bg-slate-800 p-3 rounded-xl mt-2">
+        <option>4-3-3</option>
+        <option>4-2-3-1</option>
+        <option>3-5-2</option>
+        <option>4-4-2</option>
+      </select>
+    </div>
+
+    <div>
+      <label>Pressing Intensity</label>
+      <input id="pressing" type="range" min="1" max="100" value="70" class="w-full">
+    </div>
+
+    <div>
+      <label>Attacking Width</label>
+      <input id="width" type="range" min="1" max="100" value="60" class="w-full">
+    </div>
+
+    <div>
+      <label>Tempo</label>
+      <input id="tempo" type="range" min="1" max="100" value="65" class="w-full">
+    </div>
+  </div>
+</div>
+
+  </section>  <section id="transfers-screen" class="hidden-screen">
+    <div class="card mb-4">
+      <h2 class="text-2xl font-bold mb-4">Transfer Market</h2><div id="transfer-list"></div>
+</div>
+
+  </section>  <section id="match-screen" class="hidden-screen"><div class="card mb-4">
+  <div class="flex justify-between items-center">
+    <div>
+      <div class="font-bold text-lg">Aberdeen vs Celtic</div>
+      <div id="match-clock">00:00</div>
+    </div>
+
+    <div class="text-right">
+      <div class="text-2xl font-bold">
+        <span id="home-score">0</span>
+        -
+        <span id="away-score">0</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<canvas id="matchCanvas" width="900" height="500"></canvas>
+
+<div class="grid grid-cols-2 gap-4 mt-4">
+
+  <div class="card">
+    <h3 class="font-bold mb-2">Match Stats</h3>
+
+    <div class="space-y-2">
+      <div class="flex justify-between">
+        <span>Possession</span>
+        <span id="possession">50% - 50%</span>
+      </div>
+
+      <div class="flex justify-between">
+        <span>Shots</span>
+        <span id="shots">0 - 0</span>
+      </div>
+
+      <div class="flex justify-between">
+        <span>xG</span>
+        <span id="xg">0.00 - 0.00</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3 class="font-bold mb-2">Live Commentary</h3>
+    <div id="commentary" class="text-sm h-40 overflow-y-auto space-y-2"></div>
+  </div>
+
+</div>
+
+  </section></div><nav class="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 p-2">
+  <div class="grid grid-cols-5 gap-2"><button class="nav-btn" onclick="showScreen('dashboard-screen')">
+  Home
+</button>
+
+<button class="nav-btn" onclick="showScreen('squad-screen')">
+  Squad
+</button>
+
+<button class="nav-btn" onclick="showScreen('tactics-screen')">
+  Tactics
+</button>
+
+<button class="nav-btn" onclick="showScreen('transfers-screen')">
+  Transfers
+</button>
+
+<button class="nav-btn" onclick="showScreen('match-screen')">
+  Match
+</button>
+
+  </div>
+</nav><script>
+
+const players = [
+  {
+    name: 'Jack Milne',
+    age: 23,
+    position: 'ST',
+    overall: 81,
+    potential: 88,
+    morale: 92,
+    stamina: 87,
+    value: '£14M'
+  },
+  {
+    name: 'Liam Robertson',
+    age: 19,
+    position: 'CAM',
+    overall: 74,
+    potential: 91,
+    morale: 85,
+    stamina: 82,
+    value: '£9M'
+  },
+  {
+    name: 'Connor Fraser',
+    age: 28,
+    position: 'CB',
+    overall: 79,
+    potential: 79,
+    morale: 90,
+    stamina: 80,
+    value: '£7M'
+  },
+  {
+    name: 'Ryan Boyd',
+    age: 31,
+    position: 'GK',
+    overall: 83,
+    potential: 83,
+    morale: 88,
+    stamina: 72,
+    value: '£5M'
+  }
+];
+
+const transferTargets = [
+  {
+    name: 'Mateo Silva',
+    club: 'Benfica',
+    rating: 84,
+    value: '£24M'
+  },
+  {
+    name: 'Erik Hansen',
+    club: 'Ajax',
+    rating: 79,
+    value: '£12M'
+  },
+  {
+    name: 'Luis Romero',
+    club: 'Sevilla',
+    rating: 82,
+    value: '£18M'
+  }
+];
+
+function renderPlayers() {
+  const container = document.getElementById('players-container');
+
+  players.forEach(player => {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+
+    card.innerHTML = `
+      <div class="flex justify-between mb-2">
+        <div>
+          <div class="font-bold text-lg">${player.name}</div>
+          <div class="text-slate-400">${player.position} • Age ${player.age}</div>
+        </div>
+
+        <div class="text-right">
+          <div class="text-2xl font-bold text-green-400">${player.overall}</div>
+          <div class="text-xs text-slate-400">OVR</div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <div class="flex justify-between text-sm mb-1">
+          <span>Potential</span>
+          <span>${player.potential}</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" style="width:${player.potential}%"></div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <div class="flex justify-between text-sm mb-1">
+          <span>Morale</span>
+          <span>${player.morale}</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" style="width:${player.morale}%"></div>
+        </div>
+      </div>
+
+      <div class="mb-2">
+        <div class="flex justify-between text-sm mb-1">
+          <span>Stamina</span>
+          <span>${player.stamina}</span>
+        </div>
+        <div class="stat-bar">
+          <div class="stat-fill" style="width:${player.stamina}%"></div>
+        </div>
+      </div>
+
+      <div class="mt-3 text-green-400 font-bold">
+        ${player.value}
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function renderTransfers() {
+  const container = document.getElementById('transfer-list');
+
+  transferTargets.forEach(player => {
+    const card = document.createElement('div');
+    card.className = 'player-card';
+
+    card.innerHTML = `
+      <div class="flex justify-between items-center">
+        <div>
+          <div class="font-bold text-lg">${player.name}</div>
+          <div class="text-slate-400">${player.club}</div>
+        </div>
+
+        <div class="text-right">
+          <div class="text-green-400 font-bold">${player.value}</div>
+          <button onclick="signPlayer('${player.name}')" class="bg-blue-600 mt-2 px-3 py-2 rounded-lg">
+            Scout
+          </button>
+        </div>
+      </div>
+    `;
+
+    container.appendChild(card);
+  });
+}
+
+function signPlayer(name) {
+  addCommentary(`Scouting report requested for ${name}.`);
+}
+
+function showScreen(id) {
+  const screens = [
+    'dashboard-screen',
+    'squad-screen',
+    'tactics-screen',
+    'transfers-screen',
+    'match-screen'
+  ];
+
+  screens.forEach(screen => {
+    document.getElementById(screen).classList.add('hidden-screen');
+  });
+
+  document.getElementById(id).classList.remove('hidden-screen');
+}
+
+const canvas = document.getElementById('matchCanvas');
+const ctx = canvas.getContext('2d');
+
+const homePlayers = [];
+const awayPlayers = [];
+
+for (let i = 0; i < 11; i++) {
+  homePlayers.push({
+    x: 150 + (i % 4) * 70,
+    y: 80 + Math.floor(i / 4) * 100,
+    color: '#ef4444'
+  });
+
+  awayPlayers.push({
+    x: 700 - (i % 4) * 70,
+    y: 80 + Math.floor(i / 4) * 100,
+    color: '#22c55e'
+  });
+}
+
+const ball = {
+  x: 450,
+  y: 250,
+  vx: 2,
+  vy: 1.5
+};
+
+let matchTime = 0;
+let homeScore = 0;
+let awayScore = 0;
+let shotsHome = 0;
+let shotsAway = 0;
+let xgHome = 0;
+let xgAway = 0;
+let matchRunning = false;
+
+function drawPitch() {
+  ctx.fillStyle = '#166534';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  ctx.strokeStyle = 'white';
+  ctx.lineWidth = 2;
+
+  ctx.strokeRect(20, 20, 860, 460);
+
+  ctx.beginPath();
+  ctx.moveTo(450, 20);
+  ctx.lineTo(450, 480);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(450, 250, 60, 0, Math.PI * 2);
+  ctx.stroke();
+}
+
+function drawPlayers(players) {
+  players.forEach(player => {
+    ctx.beginPath();
+    ctx.fillStyle = player.color;
+    ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
+    ctx.fill();
+  });
+}
+
+function drawBall() {
+  ctx.beginPath();
+  ctx.fillStyle = 'white';
+  ctx.arc(ball.x, ball.y, 6, 0, Math.PI * 2);
+  ctx.fill();
+}
+
+function updateBall() {
+  ball.x += ball.vx;
+  ball.y += ball.vy;
+
+  if (ball.x <= 30 || ball.x >= 870) {
+    ball.vx *= -1;
+  }
+
+  if (ball.y <= 30 || ball.y >= 470) {
+    ball.vy *= -1;
+  }
+
+  if (Math.random() < 0.01) {
+    createAttack();
+  }
+}
+
+function createAttack() {
+
+  const attackingTeam = Math.random() > 0.5 ? 'home' : 'away';
+
+  if (attackingTeam === 'home') {
+    shotsHome++;
+    xgHome += 0.14;
+
+    addCommentary('Aberdeen launch a counter attack down the wing.');
+
+    ball.vx = 5;
+    ball.vy = (Math.random() - 0.5) * 4;
+
+    if (Math.random() > 0.7) {
+      homeScore++;
+      document.getElementById('home-score').innerText = homeScore;
+
+      addCommentary('GOAL FOR ABERDEEN! Brilliant finish into the bottom corner!');
+    }
+  } else {
+    shotsAway++;
+    xgAway += 0.11;
+
+    addCommentary('Celtic move the ball quickly through midfield.');
+
+    ball.vx = -5;
+    ball.vy = (Math.random() - 0.5) * 4;
+
+    if (Math.random() > 0.75) {
+      awayScore++;
+      document.getElementById('away-score').innerText = awayScore;
+
+      addCommentary('GOAL FOR CELTIC! Clinical attacking play.');
+    }
+  }
+
+  updateStats();
+}
+
+function updateStats() {
+  document.getElementById('shots').innerText = `${shotsHome} - ${shotsAway}`;
+
+  document.getElementById('xg').innerText = `${xgHome.toFixed(2)} - ${xgAway.toFixed(2)}`;
+
+  const homePossession = Math.floor(45 + Math.random() * 10);
+  const awayPossession = 100 - homePossession;
+
+  document.getElementById('possession').innerText = `${homePossession}% - ${awayPossession}%`;
+}
+
+function addCommentary(text) {
+  const commentary = document.getElementById('commentary');
+
+  const item = document.createElement('div');
+  item.className = 'bg-slate-800 p-2 rounded-lg';
+  item.innerText = text;
+
+  commentary.prepend(item);
+}
+
+function animate() {
+  if (!matchRunning) return;
+
+  drawPitch();
+  drawPlayers(homePlayers);
+  drawPlayers(awayPlayers);
+  drawBall();
+  updateBall();
+
+  requestAnimationFrame(animate);
+}
+
+function playMatch() {
+  showScreen('match-screen');
+
+  if (matchRunning) return;
+
+  matchRunning = true;
+
+  addCommentary('Kick off! Aberdeen get the match underway.');
+
+  animate();
+
+  setInterval(() => {
+    if (!matchRunning) return;
+
+    matchTime++;
+
+    const minutes = String(Math.floor(matchTime / 60)).padStart(2, '0');
+    const seconds = String(matchTime % 60).padStart(2, '0');
+
+    document.getElementById('match-clock').innerText = `${minutes}:${seconds}`;
+
+    if (matchTime >= 5400) {
+      matchRunning = false;
+      addCommentary('FULL TIME!');
+    }
+  }, 1000);
+}
+
+renderPlayers();
+renderTransfers();
+showScreen('dashboard-screen');
+
+if (!localStorage.getItem('footballSave')) {
+  localStorage.setItem('footballSave', JSON.stringify({
+    club: 'Aberdeen',
+    money: 50000000,
+    season: '2026/27'
+  }));
+}
+
+console.log('Ultimate Football Manager Loaded Successfully');
+
 </script></body>
 </html>
----
-
-=========================
-
-📊 dashboard.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>Dashboard</header>
-<div class="container"><div class="card">
-<h2 id="name"></h2>
-<p id="stats"></p>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div><script src="game.js"></script><script>
-document.getElementById("name").innerText=player.name;
-document.getElementById("stats").innerText="OVR "+player.ovr+" REP "+player.rep;
-</script></body>
-</html>
----
-
-=========================
-
-👥 squad.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>Squad</header>
-<div class="container"><div class="card">
-<p>Rashford</p>
-<p>Bruno Fernandes</p>
-<p>Hojlund</p>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div>
-</body>
-</html>
----
-
-=========================
-
-⚽ match.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>Match</header>
-<div class="container"><div class="card">
-<h3>Live Match Simulation</h3>
-<button onclick="simulateMatch()">Play Match</button>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div><script src="game.js"></script></body>
-</html>
----
-
-=========================
-
-🏋️ training.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>Training</header>
-<div class="container"><div class="card">
-<button onclick="train('shoot')">Finishing</button>
-<button onclick="train('pass')">Passing</button>
-<button onclick="train('fit')">Fitness</button>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div><script src="game.js"></script></body>
-</html>
----
-
-=========================
-
-💰 transfers.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>Transfers</header>
-<div class="container"><div class="card">
-<p>Real Madrid offer: £200k/week</p>
-<button>Accept</button>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div>
-</body>
-</html>
----
-
-=========================
-
-🏆 league.html
-
-=========================
-
-<!DOCTYPE html><html>
-<head>
-<link rel="stylesheet" href="style.css">
-</head>
-<body>
-<header>League Table</header>
-<div class="container"><div class="card">
-<p>1. Man City</p>
-<p>2. Arsenal</p>
-<p>3. Liverpool</p>
-</div><nav>
-<a href="dashboard.html">Dashboard</a>
-<a href="squad.html">Squad</a>
-<a href="match.html">Match</a>
-<a href="training.html">Training</a>
-<a href="transfers.html">Transfers</a>
-<a href="league.html">League</a>
-</nav></div>
-</body>
-</html>
----
-
-🚀 RESULT
-
-✔ Multi-page system (REAL game structure) ✔ Stable navigation (no broken tabs) ✔ Works perfectly in Replit ✔ Scalable like a real football career mode engine
-
-
----
-
-NEXT UPGRADE OPTIONS
-
-If you want next level realism:
-
-FIFA-style animated transitions between pages
-
-real match commentary engine
-
-dynamic squad + injuries + form system
-
-transfer negotiation system
-
-manager reputation + objectives
-
-
-Just say: 👉 “make it FIFA console level transitions + realism”
