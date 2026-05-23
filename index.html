@@ -1,29 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Rangers FC Manager</title>
+  <title>Rangers FC Manager Pro</title>
   <style>
     body {
       font-family: Arial;
       background: #0b1a2b;
       color: white;
       text-align: center;
+      margin: 0;
       padding: 20px;
     }
 
     button {
-      padding: 12px 20px;
-      margin: 10px;
-      font-size: 16px;
+      padding: 10px 15px;
+      margin: 5px;
       border: none;
       border-radius: 8px;
       cursor: pointer;
     }
 
-    .start {
-      background: #1e90ff;
-      color: white;
-    }
+    .blue { background: #1e90ff; color: white; }
+    .green { background: #00c46a; color: white; }
+    .red { background: #ff4d4d; color: white; }
 
     .box {
       background: #12263a;
@@ -32,21 +31,42 @@
       border-radius: 10px;
     }
 
-    .green { color: #00ff99; }
-    .red { color: #ff4d4d; }
+    select {
+      padding: 8px;
+      border-radius: 6px;
+    }
   </style>
 </head>
 
 <body>
 
-<h1>⚽ Rangers FC Manager</h1>
-<p>You are the manager of Rangers FC</p>
+<h1>⚽ Rangers FC Manager Pro</h1>
+<p>Build Rangers into champions 🏆</p>
 
-<button class="start" onclick="startSeason()">Start Season</button>
+<div class="box">
+  💰 Budget: £<span id="money">10</span>M
+</div>
 
-<div class="box" id="output">Press start to begin your season</div>
+<div class="box">
+  🎯 Tactics:
+  <select id="tactic">
+    <option value="attack">Attack</option>
+    <option value="balanced" selected>Balanced</option>
+    <option value="defend">Defensive</option>
+  </select>
+</div>
+
+<button class="blue" onclick="playMatch()">Play Next Match</button>
+<button class="green" onclick="buyPlayer()">Buy Player (£2M)</button>
+<button class="red" onclick="resetGame()">Reset Season</button>
+
+<div class="box" id="log">Start your Rangers career</div>
+
+<div class="box" id="table"></div>
 
 <script>
+let money = 10;
+
 let teams = [
   { name: "Rangers", attack: 84, defence: 82, points: 0, gf: 0, ga: 0 },
   { name: "Celtic", attack: 86, defence: 83, points: 0, gf: 0, ga: 0 },
@@ -54,77 +74,97 @@ let teams = [
   { name: "Hearts", attack: 75, defence: 73, points: 0, gf: 0, ga: 0 }
 ];
 
+let fixtureIndex = 0;
+let fixtures = [];
+
 function rand(min, max) {
   return Math.floor(Math.random() * (max - min + 1)) + min;
 }
 
-function match(a, b) {
-  let aScore =
-    Math.floor((a.attack - b.defence) / 20) + rand(0, 2);
-
-  let bScore =
-    Math.floor((b.attack - a.defence) / 20) + rand(0, 2);
-
-  aScore = Math.max(0, aScore);
-  bScore = Math.max(0, bScore);
-
-  a.gf += aScore;
-  a.ga += bScore;
-  b.gf += bScore;
-  b.ga += aScore;
-
-  if (aScore > bScore) a.points += 3;
-  else if (bScore > aScore) b.points += 3;
-  else {
-    a.points += 1;
-    b.points += 1;
-  }
-
-  return `${a.name} ${aScore} - ${bScore} ${b.name}`;
-}
-
-function startSeason() {
-  let log = "<h2>🏆 Season Results</h2>";
-
-  // play season
+// create fixtures
+function createFixtures() {
+  fixtures = [];
   for (let i = 0; i < teams.length; i++) {
     for (let j = i + 1; j < teams.length; j++) {
-      log += match(teams[i], teams[j]) + "<br>";
-      log += match(teams[j], teams[i]) + "<br>";
+      fixtures.push([teams[i], teams[j]]);
+      fixtures.push([teams[j], teams[i]]);
     }
   }
+}
+createFixtures();
 
-  // table
-  teams.sort((a, b) => b.points - a.points);
+function playMatch() {
+  if (fixtureIndex >= fixtures.length) {
+    document.getElementById("log").innerHTML = "Season finished!";
+    updateTable();
+    return;
+  }
 
-  log += "<h2>📊 League Table</h2>";
+  let [home, away] = fixtures[fixtureIndex];
+  let tactic = document.getElementById("tactic").value;
 
-  teams.forEach((t, i) => {
-    log += `
+  let boost = tactic === "attack" ? 5 : tactic === "defend" ? -5 : 0;
+
+  let homeScore =
+    Math.max(0, Math.floor((home.attack + boost - away.defence) / 20) + rand(0, 2));
+
+  let awayScore =
+    Math.max(0, Math.floor((away.attack - home.defence) / 20) + rand(0, 2));
+
+  home.gf += homeScore;
+  home.ga += awayScore;
+  away.gf += awayScore;
+  away.ga += homeScore;
+
+  if (homeScore > awayScore) home.points += 3;
+  else if (awayScore > homeScore) away.points += 3;
+  else {
+    home.points += 1;
+    away.points += 1;
+  }
+
+  document.getElementById("log").innerHTML =
+    `⚽ ${home.name} ${homeScore} - ${awayScore} ${away.name}`;
+
+  fixtureIndex++;
+
+  updateTable();
+}
+
+function buyPlayer() {
+  if (money < 2) {
+    alert("Not enough money!");
+    return;
+  }
+
+  money -= 2;
+
+  let rangers = teams.find(t => t.name === "Rangers");
+  rangers.attack += 1;
+
+  document.getElementById("log").innerHTML =
+    "💰 Signed new player! Rangers attack improved";
+
+  updateMoney();
+}
+
+function updateMoney() {
+  document.getElementById("money").innerText = money;
+}
+
+function updateTable() {
+  let table = [...teams].sort((a, b) => b.points - a.points);
+
+  let html = "<h3>📊 League Table</h3>";
+
+  table.forEach((t, i) => {
+    html += `
       <div>
-        ${i + 1}. ${t.name} — 
-        <span class="green">${t.points} pts</span> 
-        (GF ${t.gf} / GA ${t.ga})
+        ${i + 1}. ${t.name} — ${t.points} pts (GF ${t.gf} / GA ${t.ga})
       </div>
     `;
   });
 
-  let rangers = teams.find(t => t.name === "Rangers");
-  let pos = teams.indexOf(rangers) + 1;
+  let r = table.findIndex(t => t.name === "Rangers") + 1;
 
-  log += "<h2>🔵 Rangers Result</h2>";
-
-  if (pos === 1) {
-    log += "<p class='green'>🏆 CHAMPIONS OF SCOTLAND!</p>";
-  } else if (pos <= 2) {
-    log += "<p class='green'>🥈 Champions League spot!</p>";
-  } else {
-    log += "<p class='red'>⚠️ Tough season — rebuild needed</p>";
-  }
-
-  document.getElementById("output").innerHTML = log;
-}
-</script>
-
-</body>
-</html>
+  if (r === 1) html += "<h
