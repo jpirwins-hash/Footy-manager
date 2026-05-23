@@ -13,25 +13,26 @@
     }
 
     .box {
-      max-width: 1000px;
+      max-width: 1100px;
       margin: auto;
       background: #151b2d;
       padding: 20px;
       border-radius: 12px;
     }
 
+    #game { display: none; }
+
     button {
       padding: 10px;
       margin: 5px;
-      border: none;
       border-radius: 8px;
+      border: none;
       cursor: pointer;
     }
 
-    .start { background: #00c853; }
     .train { background: #00c853; }
     .match { background: #ff9800; }
-    .offer { background: #9c27b0; }
+    .start { background: #00c853; }
 
     .grid {
       display: grid;
@@ -39,8 +40,8 @@
       gap: 10px;
     }
 
-    .card {
-      background: #1f2942;
+    .panel {
+      background: #1b2440;
       padding: 10px;
       border-radius: 10px;
     }
@@ -57,24 +58,15 @@
     }
 
     th {
-      background: #1b2550;
+      background: #111a33;
     }
 
-    #game { display: none; }
-
-    #commentary {
+    #matchFeed {
+      text-align: left;
       background: #0b1024;
       padding: 10px;
       border-radius: 10px;
-      min-height: 120px;
-      text-align: left;
-    }
-
-    #offers {
-      background: #111a33;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 10px;
+      min-height: 160px;
     }
   </style>
 </head>
@@ -87,48 +79,62 @@
   <div id="intro">
     <h1>⚽ Football Career Simulator</h1>
 
-    <input id="playerName" placeholder="Name">
+    <input id="name" placeholder="Your name">
+    <br><br>
 
-    <br>
-
-    <select id="position">
+    <select id="pos">
       <option value="striker">Striker ⚽</option>
       <option value="midfielder">Midfielder 🎮</option>
       <option value="defender">Defender 🛡️</option>
     </select>
 
     <br><br>
-
     <button class="start" onclick="startGame()">Start Career</button>
   </div>
 
   <!-- GAME -->
   <div id="game">
 
-    <h1>⚽ Career Mode</h1>
+    <h2>👤 Player</h2>
+    <p id="playerInfo"></p>
 
-    <p>Name: <span id="name"></span></p>
-    <p>Club: <span id="club"></span></p>
-    <p>Reputation: <span id="rep"></span></p>
-    <p>Wage: £<span id="wage"></span>/match</p>
+    <div class="grid">
 
-    <p>Fatigue: <span id="fatigue"></span></p>
-    <p>Form: <span id="form"></span></p>
+      <div class="panel">
+        <h3>📊 Stats</h3>
+        <p>PACE: <span id="pace"></span></p>
+        <p>SHOOT: <span id="shoot"></span></p>
+        <p>PASS: <span id="pass"></span></p>
+        <p>FITNESS: <span id="fit"></span></p>
 
-    <hr>
+        <button class="train" onclick="train()">Train</button>
+      </div>
 
-    <button class="train" onclick="train()">Train</button>
-    <button class="match" onclick="playMatch()">Play Match</button>
-    <button class="offer" onclick="checkOffers()">Check Offers</button>
+      <div class="panel">
+        <h3>⚽ Match Controls</h3>
+        <button class="match" onclick="playMatch()">Play Match</button>
+        <p>Fatigue: <span id="fatigue"></span></p>
+        <p>Form: <span id="form"></span></p>
+      </div>
 
-    <hr>
+    </div>
 
-    <div id="offers"></div>
+    <h3>📺 Match Feed</h3>
+    <div id="matchFeed"></div>
 
-    <hr>
-
-    <h2>📺 Match Feed</h2>
-    <div id="commentary"></div>
+    <h3>🏆 League Table</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Team</th>
+          <th>P</th>
+          <th>W</th>
+          <th>L</th>
+          <th>Pts</th>
+        </tr>
+      </thead>
+      <tbody id="table"></tbody>
+    </table>
 
   </div>
 
@@ -136,46 +142,57 @@
 
 <script>
 
-/* ---------------- STATE ---------------- */
+/* ---------------- GAME ---------------- */
 
 let game = {
-  started: false,
   name: "",
   position: "",
-  club: "Manchester United",
-
-  rep: 0,
   fatigue: 100,
   form: 0,
 
-  wage: 100,
-
-  offers: [],
-
   stats: {
-    pace: 30,
-    shoot: 30,
-    pass: 30,
+    pace: 40,
+    shoot: 40,
+    pass: 40,
     fit: 50
-  }
+  },
+
+  teams: []
 };
+
+/* ---------------- LEAGUE ---------------- */
+
+function initLeague() {
+  game.teams = [
+    team("Manchester City"),
+    team("Arsenal"),
+    team("Liverpool"),
+    team("Chelsea"),
+    team("Manchester United"),
+    team("Tottenham"),
+    team("Newcastle"),
+    team("Aston Villa")
+  ];
+}
+
+function team(name) {
+  return { name, p: 0, w: 0, l: 0, pts: 0 };
+}
 
 /* ---------------- START ---------------- */
 
 function startGame() {
 
-  let name = document.getElementById("playerName").value;
-  let pos = document.getElementById("position").value;
+  game.name = document.getElementById("name").value;
+  game.position = document.getElementById("pos").value;
 
-  if (!name) return alert("Enter name");
+  if (!game.name) return alert("Enter name");
 
-  game.started = true;
-  game.name = name;
-  game.position = pos;
+  if (game.position === "striker") game.stats.shoot += 10;
+  if (game.position === "midfielder") game.stats.pass += 10;
+  if (game.position === "defender") game.stats.fit += 10;
 
-  if (pos === "striker") game.stats.shoot += 10;
-  if (pos === "midfielder") game.stats.pass += 10;
-  if (pos === "defender") game.stats.fit += 10;
+  initLeague();
 
   document.getElementById("intro").style.display = "none";
   document.getElementById("game").style.display = "block";
@@ -183,138 +200,119 @@ function startGame() {
   updateUI();
 }
 
-/* ---------------- TRAIN ---------------- */
+/* ---------------- TRAINING ---------------- */
 
 function train() {
 
-  let stat = ["pace","shoot","pass"][Math.random()*3|0];
+  let stat = ["pace","shoot","pass","fit"][Math.random()*4|0];
 
   game.stats[stat] += 1 + Math.random()*2;
 
   game.fatigue -= 10;
   if (game.fatigue < 0) game.fatigue = 0;
 
-  game.rep += 1;
+  addFeed("🏋️ Training improved " + stat);
 
   updateUI();
 }
 
-/* ---------------- MATCH ---------------- */
+/* ---------------- MATCH ENGINE ---------------- */
 
 function playMatch() {
 
-  let power =
-    game.stats.pace +
-    game.stats.shoot +
-    game.stats.pass +
-    game.stats.fit +
-    game.rep +
-    game.form -
-    (game.fatigue < 40 ? 20 : 0);
+  let opponent = game.teams[Math.random()*game.teams.length|0];
 
-  let opponent = 150 + Math.random()*90;
+  opponent.p++;
+  let you = game.stats;
 
-  game.fatigue -= 15;
-  if (game.fatigue < 0) game.fatigue = 0;
+  let yourPower =
+    you.pace + you.shoot + you.pass + you.fit + game.form - (game.fatigue < 40 ? 15 : 0);
 
-  let win = power > opponent;
+  let oppPower = 150 + Math.random()*80;
 
-  if (win) {
-    game.rep += 5;
+  let feed = [];
+
+  feed.push("⚽ Kick off vs " + opponent.name);
+
+  let goalsYou = 0;
+  let goalsOpp = 0;
+
+  // simulate 5 events
+  for (let i=0;i<5;i++) {
+
+    let chance = Math.random()*100;
+
+    if (chance < yourPower/5) {
+      goalsYou++;
+      feed.push("🔥 GOAL for YOU!");
+    }
+
+    if (chance < oppPower/6) {
+      goalsOpp++;
+      feed.push("💥 Opponent scores!");
+    }
+  }
+
+  if (goalsYou > goalsOpp) {
     game.form += 2;
-    addFeed("🏆 Great performance!");
+    game.stats.fit += 0.5;
+    opponent.l++;
+    opponent.pts += 0;
+    feed.push("🏆 YOU WIN " + goalsYou + "-" + goalsOpp);
   } else {
-    game.rep += 1;
     game.form -= 2;
-    addFeed("😓 Tough match...");
+    opponent.w++;
+    opponent.pts += 3;
+    feed.push("😓 YOU LOSE " + goalsYou + "-" + goalsOpp);
   }
 
   game.form = Math.max(-10, Math.min(10, game.form));
 
-  maybeOffer();
+  game.fatigue -= 15;
+  if (game.fatigue < 0) game.fatigue = 0;
+
+  document.getElementById("matchFeed").innerHTML = feed.map(f => "<p>"+f+"</p>").join("");
 
   updateUI();
-}
-
-/* ---------------- REAL CLUBS ---------------- */
-
-function maybeOffer() {
-
-  if (Math.random() > 0.6) {
-
-    let clubs = [
-      { name:"Liverpool", rep: 15, wage: 150 },
-      { name:"Arsenal", rep: 20, wage: 180 },
-      { name:"Chelsea", rep: 25, wage: 220 },
-      { name:"Manchester City", rep: 30, wage: 300 },
-      { name:"Real Madrid", rep: 40, wage: 500 },
-      { name:"Barcelona", rep: 35, wage: 450 },
-      { name:"Bayern Munich", rep: 35, wage: 420 },
-      { name:"PSG", rep: 30, wage: 400 }
-    ];
-
-    let offer = clubs[Math.floor(Math.random()*clubs.length)];
-
-    if (game.rep >= offer.rep - 10) {
-      game.offers.push(offer);
-      addFeed("📩 Offer from " + offer.name);
-    }
-  }
-}
-
-/* ---------------- OFFERS ---------------- */
-
-function checkOffers() {
-
-  let html = "<h3>📩 Transfer Offers</h3>";
-
-  if (game.offers.length === 0) {
-    html += "<p>No offers yet</p>";
-  }
-
-  game.offers.forEach((o,i) => {
-    html += `
-      <p>
-        ${o.name} - £${o.wage}
-        <button onclick="accept(${i})">Join</button>
-      </p>
-    `;
-  });
-
-  document.getElementById("offers").innerHTML = html;
-}
-
-function accept(i) {
-
-  let offer = game.offers[i];
-
-  game.club = offer.name;
-  game.wage = offer.wage;
-
-  game.offers = [];
-
-  addFeed("✍️ Signed for " + offer.name);
-
-  updateUI();
-}
-
-/* ---------------- FEED ---------------- */
-
-function addFeed(t) {
-  document.getElementById("commentary").innerHTML =
-    `<p>${t}</p>` + document.getElementById("commentary").innerHTML;
 }
 
 /* ---------------- UI ---------------- */
 
 function updateUI() {
 
-  document.getElementById("name").innerText = game.name;
-  document.getElementById("club").innerText = game.club;
-  document.getElementById("rep").innerText = game.rep;
-  document.getElementById("wage").innerText = game.wage;
+  document.getElementById("playerInfo").innerText =
+    game.name + " | " + game.position;
+
+  document.getElementById("pace").innerText = game.stats.pace.toFixed(1);
+  document.getElementById("shoot").innerText = game.stats.shoot.toFixed(1);
+  document.getElementById("pass").innerText = game.stats.pass.toFixed(1);
+  document.getElementById("fit").innerText = game.stats.fit.toFixed(1);
+
   document.getElementById("fatigue").innerText = game.fatigue;
   document.getElementById("form").innerText = game.form;
+
+  let table = "";
+
+  game.teams.forEach(t => {
+    table += `
+      <tr>
+        <td>${t.name}</td>
+        <td>${t.p}</td>
+        <td>${t.w}</td>
+        <td>${t.l}</td>
+        <td>${t.pts}</td>
+      </tr>
+    `;
+  });
+
+  document.getElementById("table").innerHTML = table;
+}
+
+/* ---------------- FEED ---------------- */
+
+function addFeed(t) {
+  document.getElementById("matchFeed").innerHTML =
+    "<p>" + t + "</p>" + document.getElementById("matchFeed").innerHTML;
 }
 
 </script>
