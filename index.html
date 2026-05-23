@@ -1,124 +1,165 @@
-import React, { useEffect, useState } from "react";
-import { motion } from "framer-motion";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useEffect, useState } from "react"; import { Card, CardContent } from "@/components/ui/card"; import { Button } from "@/components/ui/button"; import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"; import { motion } from "framer-motion";
 
-// -----------------------------
-// FOOTBALL CAREER MODE v1.1
-// PRO MOBILE GAME UI BUILD
-// -----------------------------
+// ------------------------------------ // Football Career Mode v1.1 (PRO UI UPGRADE) // Mobile Game Quality UI Overhaul // ------------------------------------
 
-const initialState = {
-  season: 2026,
-  money: 5000,
-  reputation: 10,
-  club: "Free Agent",
-  player: {
-    skill: 50,
-    stamina: 50,
-    morale: 50,
-  },
-  fixtures: [
-    { id: 1, opponent: "Rovers FC", difficulty: 40, played: false },
-    { id: 2, opponent: "City United", difficulty: 60, played: false },
-    { id: 3, opponent: "Albion Town", difficulty: 55, played: false },
-  ],
-  jobs: [
-    { id: 1, club: "Rangers Reserves", repReq: 10, salary: 1200 },
-    { id: 2, club: "Aberdeen U21", repReq: 20, salary: 2000 },
-    { id: 3, club: "Hearts FC", repReq: 35, salary: 3500 },
-  ],
-  log: [],
-};
+const initialState = { day: 1, season: 2026, money: 5000, reputation: 10, club: "Free Agent", player: { name: "You", stamina: 50, skill: 50, morale: 50, }, fixtures: [ { id: 1, opponent: "Rovers FC", difficulty: 40, played: false }, { id: 2, opponent: "City United", difficulty: 60, played: false }, { id: 3, opponent: "Albion Town", difficulty: 55, played: false }, ], jobs: [ { id: 1, club: "Rangers Reserves", repReq: 10, salary: 1200 }, { id: 2, club: "Aberdeen U21", repReq: 20, salary: 2000 }, { id: 3, club: "Hearts FC", repReq: 35, salary: 3500 }, ], log: [], };
 
-function saveGame(state) {
-  localStorage.setItem("career_v1", JSON.stringify(state));
+function saveGame(state) { localStorage.setItem("career_save_v1", JSON.stringify(state)); }
+
+function loadGame() { const data = localStorage.getItem("career_save_v1"); return data ? JSON.parse(data) : initialState; }
+
+export default function Game() { const [state, setState] = useState(loadGame());
+
+useEffect(() => { saveGame(state); }, [state]);
+
+function addLog(msg) { setState((s) => ({ ...s, log: [msg, ...s.log].slice(0, 8) })); }
+
+function train(type) { setState((s) => { const p = { ...s.player }; if (type === "skill") p.skill += 2; if (type === "stamina") p.stamina += 2; if (type === "morale") p.morale += 2; return { ...s, player: p }; }); addLog(Training improved ${type}); }
+
+function playMatch(fix) { const result = state.player.skill + state.player.stamina * 0.3 > fix.difficulty + Math.random() * 20;
+
+setState((s) => ({
+  ...s,
+  fixtures: s.fixtures.map((f) =>
+    f.id === fix.id ? { ...f, played: true } : f
+  ),
+  money: s.money + (result ? 800 : 150),
+  reputation: s.reputation + (result ? 3 : 0),
+}));
+
+addLog(result ? "BIG WIN! Momentum rising 🔥" : "Tough loss... regroup");
+
 }
 
-function loadGame() {
-  const data = localStorage.getItem("career_v1");
-  return data ? JSON.parse(data) : initialState;
-}
+function applyJob(job) { if (state.reputation >= job.repReq) { setState((s) => ({ ...s, club: job.club, money: s.money + job.salary, })); addLog(Signed contract with ${job.club} ✍️); } else { addLog("Not enough reputation for this job"); } }
 
-export default function Game() {
-  const [state, setState] = useState(loadGame());
+const glassCard = "backdrop-blur-xl bg-white/10 border border-white/20 shadow-2xl rounded-2xl";
 
-  useEffect(() => {
-    saveGame(state);
-  }, [state]);
+return ( <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white p-4"> {/* HEADER */} <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-4" > <h1 className="text-3xl font-bold tracking-tight"> Career Mode 1.1 </h1> <p className="text-white/60">Build your legacy from nothing</p> </motion.div>
 
-  const addLog = (msg) => {
-    setState((s) => ({
-      ...s,
-      log: [msg, ...s.log].slice(0, 8),
-    }));
-  };
-
-  const train = (type) => {
-    setState((s) => {
-      const p = { ...s.player };
-
-      if (type === "skill") p.skill += 2;
-      if (type === "stamina") p.stamina += 2;
-      if (type === "morale") p.morale += 2;
-
-      return { ...s, player: p };
-    });
-
-    addLog(`Training improved ${type}`);
-  };
-
-  const playMatch = (fix) => {
-    const power =
-      state.player.skill + state.player.stamina * 0.3;
-
-    const win =
-      power > fix.difficulty + Math.random() * 20;
-
-    setState((s) => ({
-      ...s,
-      fixtures: s.fixtures.map((f) =>
-        f.id === fix.id ? { ...f, played: true } : f
-      ),
-      money: s.money + (win ? 800 : 150),
-      reputation: s.reputation + (win ? 3 : 0),
-    }));
-
-    addLog(win ? "BIG WIN! 🔥" : "Tough loss...");
-  };
-
-  const applyJob = (job) => {
-    if (state.reputation >= job.repReq) {
-      setState((s) => ({
-        ...s,
-        club: job.club,
-        money: s.money + job.salary,
-      }));
-      addLog(`Signed with ${job.club} ✍️`);
-    } else {
-      addLog("Not enough reputation");
-    }
-  };
-
-  const glass =
-    "backdrop-blur-xl bg-white/10 border border-white/20 rounded-2xl shadow-2xl";
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-black text-white p-4">
-
-      {/* HEADER */}
+{/* STATS BAR */}
+  <div className="grid grid-cols-4 gap-2 mb-4">
+    {[
+      { label: "Money", value: `£${state.money}` },
+      { label: "Rep", value: state.reputation },
+      { label: "Club", value: state.club },
+      { label: "Season", value: state.season },
+    ].map((s, i) => (
       <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-4"
+        key={i}
+        whileHover={{ scale: 1.05 }}
+        className={glassCard + " p-2 text-center"}
       >
-        <h1 className="text-3xl font-bold">Career Mode 1.1</h1>
-        <p className="text-white/60">Build your football legacy</p>
+        <p className="text-xs text-white/60">{s.label}</p>
+        <p className="font-bold text-sm truncate">{s.value}</p>
       </motion.div>
+    ))}
+  </div>
 
-      {/* TOP STATS */}
-      <div className="grid grid-cols-4 gap-2 mb-4">
+  {/* MAIN TABS */}
+  <Tabs defaultValue="player" className="space-y-4">
+    <TabsList className="grid grid-cols-5 bg-white/10 backdrop-blur-xl">
+      <TabsTrigger value="player">Player</TabsTrigger>
+      <TabsTrigger value="training">Training</TabsTrigger>
+      <TabsTrigger value="fixtures">Matches</TabsTrigger>
+      <TabsTrigger value="jobs">Jobs</TabsTrigger>
+      <TabsTrigger value="league">League</TabsTrigger>
+    </TabsList>
+
+    {/* PLAYER */}
+    <TabsContent value="player">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+        <Card className={glassCard}>
+          <CardContent className="p-4 space-y-2">
+            <p>⚡ Skill: {state.player.skill}</p>
+            <p>🏃 Stamina: {state.player.stamina}</p>
+            <p>🧠 Morale: {state.player.morale}</p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    </TabsContent>
+
+    {/* TRAINING */}
+    <TabsContent value="training">
+      <div className="grid grid-cols-3 gap-2">
         {[
-          { label: "Money", value: `£${state.money}` },
-          { label: "Rep", value
+          { t: "skill", icon: "⚡" },
+          { t: "stamina", icon: "🏃" },
+          { t: "morale", icon: "🧠" },
+        ].map((b) => (
+          <motion.div whileTap={{ scale: 0.95 }} key={b.t}>
+            <Button
+              className="w-full h-20 text-lg bg-white/10 backdrop-blur-xl"
+              onClick={() => train(b.t)}
+            >
+              {b.icon} {b.t}
+            </Button>
+          </motion.div>
+        ))}
+      </div>
+    </TabsContent>
+
+    {/* FIXTURES */}
+    <TabsContent value="fixtures">
+      <div className="space-y-2">
+        {state.fixtures.map((f) => (
+          <motion.div key={f.id} whileHover={{ scale: 1.02 }}>
+            <Card className={glassCard}>
+              <CardContent className="p-3 flex justify-between items-center">
+                <span>{f.opponent}</span>
+                <Button
+                  disabled={f.played}
+                  onClick={() => playMatch(f)}
+                >
+                  {f.played ? "Completed" : "Play"}
+                </Button>
+              </CardContent>
+            </Card>
+          </motion.div>
+        ))}
+      </div>
+    </TabsContent>
+
+    {/* JOBS */}
+    <TabsContent value="jobs">
+      <div className="space-y-2">
+        {state.jobs.map((j) => (
+          <Card key={j.id} className={glassCard}>
+            <CardContent className="p-3 flex justify-between">
+              <span>{j.club}</span>
+              <Button onClick={() => applyJob(j)}>Apply</Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </TabsContent>
+
+    {/* LEAGUE */}
+    <TabsContent value="league">
+      <Card className={glassCard}>
+        <CardContent className="p-4">
+          <p className="text-white/70">
+            Live league simulation coming in v1.2
+          </p>
+          <p>Your journey affects standings dynamically</p>
+        </CardContent>
+      </Card>
+    </TabsContent>
+  </Tabs>
+
+  {/* LOG */}
+  <div className="mt-4">
+    <Card className={glassCard}>
+      <CardContent className="p-3">
+        <h2 className="font-bold mb-2">Live Career Feed</h2>
+        {state.log.map((l, i) => (
+          <p key={i} className="text-sm text-white/70">
+            • {l}
+          </p>
+        ))}
+      </CardContent>
+    </Card>
+  </div>
+</div>
+
+); }
