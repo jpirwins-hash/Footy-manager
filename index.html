@@ -1,822 +1,130 @@
-<!DOCTYPE html><html lang="en">
+<!DOCTYPE html>
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-  <title>Ultimate Football Manager</title>
-  <script src="https://cdn.tailwindcss.com"></script>
+  <title>Rangers FC Manager</title>
   <style>
-    html, body {
-      margin: 0;
-      padding: 0;
-      background: #020617;
+    body {
+      font-family: Arial;
+      background: #0b1a2b;
       color: white;
-      font-family: Arial, sans-serif;
-      overflow-x: hidden;
-    }canvas {
-  width: 100%;
-  height: auto;
-  border-radius: 16px;
-  background: #14532d;
-  border: 2px solid #1e293b;
-}
+      text-align: center;
+      padding: 20px;
+    }
 
-.card {
-  background: #0f172a;
-  border: 1px solid #1e293b;
-  border-radius: 16px;
-  padding: 16px;
-}
+    button {
+      padding: 12px 20px;
+      margin: 10px;
+      font-size: 16px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+    }
 
-.nav-btn {
-  padding: 12px;
-  border-radius: 12px;
-  background: #1e293b;
-  transition: 0.2s;
-}
+    .start {
+      background: #1e90ff;
+      color: white;
+    }
 
-.nav-btn:hover {
-  background: #334155;
-}
+    .box {
+      background: #12263a;
+      padding: 15px;
+      margin-top: 15px;
+      border-radius: 10px;
+    }
 
-.player-card {
-  background: #111827;
-  border: 1px solid #374151;
-  border-radius: 12px;
-  padding: 12px;
-  margin-bottom: 10px;
-}
-
-.stat-bar {
-  height: 8px;
-  border-radius: 999px;
-  background: #1e293b;
-  overflow: hidden;
-}
-
-.stat-fill {
-  height: 100%;
-  background: #22c55e;
-}
-
-.hidden-screen {
-  display: none;
-}
-
+    .green { color: #00ff99; }
+    .red { color: #ff4d4d; }
   </style>
 </head>
-<body><div class="min-h-screen p-4 pb-24">  <header class="mb-6">
-    <div class="flex justify-between items-center">
+
+<body>
+
+<h1>⚽ Rangers FC Manager</h1>
+<p>You are the manager of Rangers FC</p>
+
+<button class="start" onclick="startSeason()">Start Season</button>
+
+<div class="box" id="output">Press start to begin your season</div>
+
+<script>
+let teams = [
+  { name: "Rangers", attack: 84, defence: 82, points: 0, gf: 0, ga: 0 },
+  { name: "Celtic", attack: 86, defence: 83, points: 0, gf: 0, ga: 0 },
+  { name: "Aberdeen", attack: 76, defence: 74, points: 0, gf: 0, ga: 0 },
+  { name: "Hearts", attack: 75, defence: 73, points: 0, gf: 0, ga: 0 }
+];
+
+function rand(min, max) {
+  return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+function match(a, b) {
+  let aScore =
+    Math.floor((a.attack - b.defence) / 20) + rand(0, 2);
+
+  let bScore =
+    Math.floor((b.attack - a.defence) / 20) + rand(0, 2);
+
+  aScore = Math.max(0, aScore);
+  bScore = Math.max(0, bScore);
+
+  a.gf += aScore;
+  a.ga += bScore;
+  b.gf += bScore;
+  b.ga += aScore;
+
+  if (aScore > bScore) a.points += 3;
+  else if (bScore > aScore) b.points += 3;
+  else {
+    a.points += 1;
+    b.points += 1;
+  }
+
+  return `${a.name} ${aScore} - ${bScore} ${b.name}`;
+}
+
+function startSeason() {
+  let log = "<h2>🏆 Season Results</h2>";
+
+  // play season
+  for (let i = 0; i < teams.length; i++) {
+    for (let j = i + 1; j < teams.length; j++) {
+      log += match(teams[i], teams[j]) + "<br>";
+      log += match(teams[j], teams[i]) + "<br>";
+    }
+  }
+
+  // table
+  teams.sort((a, b) => b.points - a.points);
+
+  log += "<h2>📊 League Table</h2>";
+
+  teams.forEach((t, i) => {
+    log += `
       <div>
-        <h1 class="text-3xl font-bold">Ultimate Football Manager</h1>
-        <p class="text-slate-400">Living Football Universe Prototype</p>
-      </div>
-      <div class="text-right">
-        <div id="money" class="font-bold text-green-400">£50M</div>
-        <div id="season">Season 2026/27</div>
-      </div>
-    </div>
-  </header>  <section id="dashboard-screen"><div class="grid grid-cols-2 gap-4 mb-6">
-  <div class="card">
-    <div class="text-slate-400">Manager Reputation</div>
-    <div id="manager-rep" class="text-xl font-bold text-blue-400">Respected</div>
-  </div>
-
-  <div class="card">
-    <div class="text-slate-400">Club Finances</div>
-    <div id="club-finances" class="text-xl font-bold text-green-400">Healthy</div>
-  </div>
-  <div class="card">
-    <div class="text-slate-400">Club</div>
-    <div class="text-xl font-bold">Aberdeen FC</div>
-  </div>
-
-  <div class="card">
-    <div class="text-slate-400">League Position</div>
-    <div class="text-xl font-bold">3rd</div>
-  </div>
-
-  <div class="card">
-    <div class="text-slate-400">Fan Happiness</div>
-    <div class="text-xl font-bold text-green-400">Very Happy</div>
-  </div>
-
-  <div class="card">
-    <div class="text-slate-400">Board Confidence</div>
-    <div class="text-xl font-bold text-yellow-400">Stable</div>
-  </div>
-</div>
-
-<div class="card mb-6">
-  <div class="flex justify-between items-center mb-3">
-    <h2 class="text-xl font-bold">Next Match</h2>
-    <button onclick="playMatch()" class="bg-green-600 px-4 py-2 rounded-xl">
-      Play Match
-    </button>
-  </div>
-
-  <div class="text-lg">Aberdeen vs Celtic</div>
-  <div class="text-slate-400">Scottish Premiership</div>
-</div>
-
-<div class="card mb-6">
-  <h2 class="text-xl font-bold mb-4">League Table</h2>
-
-  <div class="space-y-2">
-    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
-      <span>1. Celtic</span>
-      <span>76 pts</span>
-    </div>
-
-    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
-      <span>2. Rangers</span>
-      <span>71 pts</span>
-    </div>
-
-    <div class="flex justify-between bg-red-900 p-2 rounded-lg">
-      <span>3. Aberdeen</span>
-      <span>63 pts</span>
-    </div>
-
-    <div class="flex justify-between bg-slate-800 p-2 rounded-lg">
-      <span>4. Hearts</span>
-      <span>57 pts</span>
-    </div>
-  </div>
-</div>
-
-<div class="card mb-6">
-  <h2 class="text-xl font-bold mb-4">Board Objectives</h2>
-
-  <div class="space-y-3">
-    <div class="bg-slate-800 p-3 rounded-lg">Finish in Top 3</div>
-    <div class="bg-slate-800 p-3 rounded-lg">Reach Scottish Cup Semi Final</div>
-    <div class="bg-slate-800 p-3 rounded-lg">Develop Youth Players</div>
-  </div>
-</div>
-
-<div class="card mb-6">
-  <h2 class="text-xl font-bold mb-4">Upcoming Fixtures</h2>
-
-  <div class="space-y-3">
-    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
-      <span>Aberdeen vs Celtic</span>
-      <span>League</span>
-    </div>
-
-    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
-      <span>Hearts vs Aberdeen</span>
-      <span>Cup</span>
-    </div>
-
-    <div class="bg-slate-800 p-3 rounded-lg flex justify-between">
-      <span>Aberdeen vs Rangers</span>
-      <span>League</span>
-    </div>
-  </div>
-</div>
-
-<div class="card">
-  <h2 class="text-xl font-bold mb-4">Football News</h2>
-
-  <div id="news-feed" class="space-y-3">
-    <div class="bg-slate-800 p-3 rounded-lg">
-      Celtic reportedly scouting Dutch wonderkid.
-    </div>
-
-    <div class="bg-slate-800 p-3 rounded-lg">
-      Aberdeen fans delighted with recent form.
-    </div>
-
-    <div class="bg-slate-800 p-3 rounded-lg">
-      Rangers sack assistant manager after poor results.
-    </div>
-  </div>
-</div>
-
-  </section>  <section id="squad-screen" class="hidden-screen">
-    <div class="card mb-4">
-      <h2 class="text-2xl font-bold mb-2">First Team Squad</h2>
-      <p class="text-slate-400">Manage player morale, form and development.</p>
-    </div><div id="players-container"></div>
-
-  </section>  <section id="tactics-screen" class="hidden-screen">
-    <div class="card mb-4">
-      <h2 class="text-2xl font-bold mb-4">Tactics</h2><div class="space-y-4">
-    <div>
-      <label>Formation</label>
-      <select id="formation" class="w-full bg-slate-800 p-3 rounded-xl mt-2">
-        <option>4-3-3</option>
-        <option>4-2-3-1</option>
-        <option>3-5-2</option>
-        <option>4-4-2</option>
-      </select>
-    </div>
-
-    <div>
-      <label>Pressing Intensity</label>
-      <input id="pressing" type="range" min="1" max="100" value="70" class="w-full">
-    </div>
-
-    <div>
-      <label>Attacking Width</label>
-      <input id="width" type="range" min="1" max="100" value="60" class="w-full">
-    </div>
-
-    <div>
-      <label>Tempo</label>
-      <input id="tempo" type="range" min="1" max="100" value="65" class="w-full">
-    </div>
-  </div>
-</div>
-
-  </section>  <section id="transfers-screen" class="hidden-screen">
-    <div class="card mb-4">
-      <h2 class="text-2xl font-bold mb-4">Transfer Market</h2><div id="transfer-list"></div>
-</div>
-
-  </section>  <section id="match-screen" class="hidden-screen"><div class="card mb-4">
-  <div class="flex justify-between items-center">
-    <div>
-      <div class="font-bold text-lg">Aberdeen vs Celtic</div>
-      <div id="match-clock">00:00</div>
-    </div>
-
-    <div class="text-right">
-      <div class="text-2xl font-bold">
-        <span id="home-score">0</span>
-        -
-        <span id="away-score">0</span>
-      </div>
-    </div>
-  </div>
-</div>
-
-<canvas id="matchCanvas" width="900" height="500"></canvas>
-
-<div class="grid grid-cols-2 gap-4 mt-4">
-
-  <div class="card">
-    <h3 class="font-bold mb-2">Match Stats</h3>
-
-    <div class="space-y-2">
-      <div class="flex justify-between">
-        <span>Possession</span>
-        <span id="possession">50% - 50%</span>
-      </div>
-
-      <div class="flex justify-between">
-        <span>Shots</span>
-        <span id="shots">0 - 0</span>
-      </div>
-
-      <div class="flex justify-between">
-        <span>xG</span>
-        <span id="xg">0.00 - 0.00</span>
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h3 class="font-bold mb-2">Live Commentary</h3>
-    <div id="commentary" class="text-sm h-40 overflow-y-auto space-y-2"></div>
-  </div>
-
-</div>
-
-  </section></div><nav class="fixed bottom-0 left-0 right-0 bg-slate-950 border-t border-slate-800 p-2">
-  <div class="grid grid-cols-5 gap-2"><button class="nav-btn" onclick="showScreen('dashboard-screen')">
-  Home
-</button>
-
-<button class="nav-btn" onclick="showScreen('squad-screen')">
-  Squad
-</button>
-
-<button class="nav-btn" onclick="showScreen('tactics-screen')">
-  Tactics
-</button>
-
-<button class="nav-btn" onclick="showScreen('transfers-screen')">
-  Transfers
-</button>
-
-<button class="nav-btn" onclick="showScreen('match-screen')">
-  Match
-</button>
-
-  </div>
-</nav><script>
-
-const players = [
-  {
-    name: 'Jack Milne',
-    age: 23,
-    position: 'ST',
-    overall: 81,
-    potential: 88,
-    morale: 92,
-    stamina: 87,
-    value: '£14M'
-  },
-  {
-    name: 'Liam Robertson',
-    age: 19,
-    position: 'CAM',
-    overall: 74,
-    potential: 91,
-    morale: 85,
-    stamina: 82,
-    value: '£9M'
-  },
-  {
-    name: 'Connor Fraser',
-    age: 28,
-    position: 'CB',
-    overall: 79,
-    potential: 79,
-    morale: 90,
-    stamina: 80,
-    value: '£7M'
-  },
-  {
-    name: 'Ryan Boyd',
-    age: 31,
-    position: 'GK',
-    overall: 83,
-    potential: 83,
-    morale: 88,
-    stamina: 72,
-    value: '£5M'
-  }
-];
-
-const clubData = {
-  name: 'Aberdeen',
-  finances: 50000000,
-  wageBudget: 1200000,
-  transferBudget: 30000000,
-  sponsorship: 6000000,
-  stadium: 'Pittodrie Stadium',
-  capacity: 21000,
-  reputation: 78,
-  youthLevel: 72,
-  trainingLevel: 74
-};
-
-const transferTargets = [
-  {
-    name: 'Mateo Silva',
-    club: 'Benfica',
-    rating: 84,
-    value: '£24M'
-  },
-  {
-    name: 'Erik Hansen',
-    club: 'Ajax',
-    rating: 79,
-    value: '£12M'
-  },
-  {
-    name: 'Luis Romero',
-    club: 'Sevilla',
-    rating: 82,
-    value: '£18M'
-  }
-];
-
-function renderPlayers() {
-  const container = document.getElementById('players-container');
-
-  players.forEach(player => {
-    const card = document.createElement('div');
-    card.className = 'player-card';
-
-    card.innerHTML = `
-      <div class="flex justify-between mb-2">
-        <div>
-          <div class="font-bold text-lg">${player.name}</div>
-          <div class="text-slate-400">${player.position} • Age ${player.age}</div>
-        </div>
-
-        <div class="text-right">
-          <div class="text-2xl font-bold text-green-400">${player.overall}</div>
-          <div class="text-xs text-slate-400">OVR</div>
-        </div>
-      </div>
-
-      <div class="mb-2">
-        <div class="flex justify-between text-sm mb-1">
-          <span>Potential</span>
-          <span>${player.potential}</span>
-        </div>
-        <div class="stat-bar">
-          <div class="stat-fill" style="width:${player.potential}%"></div>
-        </div>
-      </div>
-
-      <div class="mb-2">
-        <div class="flex justify-between text-sm mb-1">
-          <span>Morale</span>
-          <span>${player.morale}</span>
-        </div>
-        <div class="stat-bar">
-          <div class="stat-fill" style="width:${player.morale}%"></div>
-        </div>
-      </div>
-
-      <div class="mb-2">
-        <div class="flex justify-between text-sm mb-1">
-          <span>Stamina</span>
-          <span>${player.stamina}</span>
-        </div>
-        <div class="stat-bar">
-          <div class="stat-fill" style="width:${player.stamina}%"></div>
-        </div>
-      </div>
-
-      <div class="mt-3 text-green-400 font-bold">
-        ${player.value}
+        ${i + 1}. ${t.name} — 
+        <span class="green">${t.points} pts</span> 
+        (GF ${t.gf} / GA ${t.ga})
       </div>
     `;
-
-    container.appendChild(card);
-  });
-}
-
-function renderTransfers() {
-  const container = document.getElementById('transfer-list');
-
-  transferTargets.forEach(player => {
-    const card = document.createElement('div');
-    card.className = 'player-card';
-
-    card.innerHTML = `
-      <div class="flex justify-between items-center">
-        <div>
-          <div class="font-bold text-lg">${player.name}</div>
-          <div class="text-slate-400">${player.club}</div>
-        </div>
-
-        <div class="text-right">
-          <div class="text-green-400 font-bold">${player.value}</div>
-          <button onclick="signPlayer('${player.name}')" class="bg-blue-600 mt-2 px-3 py-2 rounded-lg">
-            Scout
-          </button>
-        </div>
-      </div>
-    `;
-
-    container.appendChild(card);
-  });
-}
-
-function signPlayer(name) {
-  addCommentary(`Scouting report requested for ${name}.`);
-
-  const fee = Math.floor(3000000 + Math.random() * 20000000);
-
-  addCommentary(`${name} estimated transfer fee: £${fee.toLocaleString()}`);
-}
-
-function simulateTransferWindow() {
-  const rumours = [
-    'Premier League club targeting Aberdeen defender.',
-    'Agent offers experienced striker to Aberdeen.',
-    'Celtic preparing £12M bid for young midfielder.',
-    'European scouts attend Aberdeen fixture.',
-    'Club considering stadium expansion plans.'
-  ];
-
-  addCommentary(rumours[Math.floor(Math.random() * rumours.length)]);
-}
-
-function calculateFinances() {
-  const ticketIncome = Math.floor(200000 + Math.random() * 600000);
-  const sponsorshipIncome = Math.floor(100000 + Math.random() * 300000);
-  const wages = Math.floor(250000 + Math.random() * 400000);
-
-  clubData.finances += ticketIncome + sponsorshipIncome - wages;
-
-  document.getElementById('money').innerText = `£${Math.floor(clubData.finances / 1000000)}M`;
-}
-
-function simulateTraining() {
-  players.forEach(player => {
-    if (Math.random() > 0.5) {
-      player.stamina = Math.min(100, player.stamina + 1);
-    }
-
-    if (Math.random() > 0.8) {
-      player.overall += 1;
-      addCommentary(`${player.name} improves significantly in training.`);
-    }
-
-    if (Math.random() > 0.95) {
-      addCommentary(`${player.name} suffers a minor training injury.`);
-      player.stamina -= 10;
-    }
-  });
-}
-
-function simulateLeague() {
-  const teams = ['Celtic', 'Rangers', 'Hearts', 'Hibernian', 'Aberdeen'];
-
-  const randomTeam = teams[Math.floor(Math.random() * teams.length)];
-
-  addCommentary(`${randomTeam} wins their latest league fixture.`);
-}
-
-function autosaveCareer() {
-  localStorage.setItem('footballSave', JSON.stringify({
-    clubData,
-    players,
-    season: document.getElementById('season').innerText,
-    scores: {
-      homeScore,
-      awayScore
-    }
-  }));
-}
-
-function loadCareer() {
-  const save = JSON.parse(localStorage.getItem('footballSave'));
-
-  if (!save) return;
-
-  addCommentary('Career save loaded successfully.');
-}
-
-function generateMatchEvent() {
-  const events = [
-    'Dangerous through ball into the box.',
-    'Crowd erupts after huge tackle in midfield.',
-    'Goalkeeper makes brilliant reaction save.',
-    'Counter attack developing rapidly.',
-    'Winger overlaps down the left side.',
-    'Fans chant loudly as pressure builds.'
-  ];
-
-  addCommentary(events[Math.floor(Math.random() * events.length)]);
-}
-
-function showScreen(id) {
-  const screens = [
-    'dashboard-screen',
-    'squad-screen',
-    'tactics-screen',
-    'transfers-screen',
-    'match-screen'
-  ];
-
-  screens.forEach(screen => {
-    document.getElementById(screen).classList.add('hidden-screen');
   });
 
-  document.getElementById(id).classList.remove('hidden-screen');
-}
+  let rangers = teams.find(t => t.name === "Rangers");
+  let pos = teams.indexOf(rangers) + 1;
 
-const canvas = document.getElementById('matchCanvas');
-const ctx = canvas.getContext('2d');
+  log += "<h2>🔵 Rangers Result</h2>";
 
-const homePlayers = [];
-const awayPlayers = [];
-
-for (let i = 0; i < 11; i++) {
-  homePlayers.push({
-    x: 150 + (i % 4) * 70,
-    y: 80 + Math.floor(i / 4) * 100,
-    color: '#ef4444'
-  });
-
-  awayPlayers.push({
-    x: 700 - (i % 4) * 70,
-    y: 80 + Math.floor(i / 4) * 100,
-    color: '#22c55e'
-  });
-}
-
-const ball = {
-  x: 450,
-  y: 250,
-  vx: 2,
-  vy: 1.5
-};
-
-let matchTime = 0;
-let homeScore = 0;
-let awayScore = 0;
-let shotsHome = 0;
-let shotsAway = 0;
-let xgHome = 0;
-let xgAway = 0;
-let matchRunning = false;
-
-function drawPitch() {
-  ctx.fillStyle = '#166534';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-  ctx.strokeStyle = 'white';
-  ctx.lineWidth = 2;
-
-  ctx.strokeRect(20, 20, 860, 460);
-
-  ctx.beginPath();
-  ctx.moveTo(450, 20);
-  ctx.lineTo(450, 480);
-  ctx.stroke();
-
-  ctx.beginPath();
-  ctx.arc(450, 250, 60, 0, Math.PI * 2);
-  ctx.stroke();
-}
-
-function drawPlayers(players) {
-  players.forEach(player => {
-    ctx.beginPath();
-    ctx.fillStyle = player.color;
-    ctx.arc(player.x, player.y, 12, 0, Math.PI * 2);
-    ctx.fill();
-  });
-}
-
-function drawBall() {
-  ctx.beginPath();
-  ctx.fillStyle = 'white';
-  ctx.arc(ball.x, ball.y, 6, 0, Math.PI * 2);
-  ctx.fill();
-}
-
-function updateBall() {
-  ball.x += ball.vx;
-  ball.y += ball.vy;
-
-  if (ball.x <= 30 || ball.x >= 870) {
-    ball.vx *= -1;
-  }
-
-  if (ball.y <= 30 || ball.y >= 470) {
-    ball.vy *= -1;
-  }
-
-  if (Math.random() < 0.01) {
-    createAttack();
-  }
-}
-
-function createAttack() {
-
-  const attackingTeam = Math.random() > 0.5 ? 'home' : 'away';
-
-  if (attackingTeam === 'home') {
-    shotsHome++;
-    xgHome += 0.14;
-
-    addCommentary('Aberdeen launch a counter attack down the wing.');
-
-    ball.vx = 5;
-    ball.vy = (Math.random() - 0.5) * 4;
-
-    if (Math.random() > 0.7) {
-      homeScore++;
-      document.getElementById('home-score').innerText = homeScore;
-
-      addCommentary('GOAL FOR ABERDEEN! Brilliant finish into the bottom corner!');
-    }
+  if (pos === 1) {
+    log += "<p class='green'>🏆 CHAMPIONS OF SCOTLAND!</p>";
+  } else if (pos <= 2) {
+    log += "<p class='green'>🥈 Champions League spot!</p>";
   } else {
-    shotsAway++;
-    xgAway += 0.11;
-
-    addCommentary('Celtic move the ball quickly through midfield.');
-
-    ball.vx = -5;
-    ball.vy = (Math.random() - 0.5) * 4;
-
-    if (Math.random() > 0.75) {
-      awayScore++;
-      document.getElementById('away-score').innerText = awayScore;
-
-      addCommentary('GOAL FOR CELTIC! Clinical attacking play.');
-    }
+    log += "<p class='red'>⚠️ Tough season — rebuild needed</p>";
   }
 
-  updateStats();
+  document.getElementById("output").innerHTML = log;
 }
+</script>
 
-function updateStats() {
-  document.getElementById('shots').innerText = `${shotsHome} - ${shotsAway}`;
-
-  document.getElementById('xg').innerText = `${xgHome.toFixed(2)} - ${xgAway.toFixed(2)}`;
-
-  const homePossession = Math.floor(45 + Math.random() * 10);
-  const awayPossession = 100 - homePossession;
-
-  document.getElementById('possession').innerText = `${homePossession}% - ${awayPossession}%`;
-}
-
-function addCommentary(text) {
-  const commentary = document.getElementById('commentary');
-
-  const item = document.createElement('div');
-  item.className = 'bg-slate-800 p-2 rounded-lg';
-  item.innerText = text;
-
-  commentary.prepend(item);
-}
-
-function animate() {
-  if (!matchRunning) return;
-
-  drawPitch();
-  drawPlayers(homePlayers);
-  drawPlayers(awayPlayers);
-  drawBall();
-  updateBall();
-
-  requestAnimationFrame(animate);
-}
-
-function playMatch() {
-  showScreen('match-screen');
-
-  if (matchRunning) return;
-
-  matchRunning = true;
-
-  addCommentary('Kick off! Aberdeen get the match underway.');
-
-  animate();
-
-  setInterval(() => {
-    if (!matchRunning) return;
-
-    matchTime++;
-
-    const minutes = String(Math.floor(matchTime / 60)).padStart(2, '0');
-    const seconds = String(matchTime % 60).padStart(2, '0');
-
-    document.getElementById('match-clock').innerText = `${minutes}:${seconds}`;
-
-    if (matchTime >= 5400) {
-      matchRunning = false;
-      addCommentary('FULL TIME!');
-    }
-  }, 1000);
-}
-
-renderPlayers();
-renderTransfers();
-showScreen('dashboard-screen');
-
-if (!localStorage.getItem('footballSave')) {
-  localStorage.setItem('footballSave', JSON.stringify({
-    club: 'Aberdeen',
-    money: 50000000,
-    season: '2026/27'
-  }));
-}
-
-function advanceDay() {
-  const randomNews = [
-    'Rangers preparing major summer rebuild.',
-    'Young striker impresses in training.',
-    'Fans demand improved defensive performances.',
-    'Board pleased with financial growth.',
-    'Scout discovers highly rated teenager in Spain.',
-    'European clubs monitoring Aberdeen midfielder.',
-    'Captain delivers inspiring dressing room speech.',
-    'Training intensity increased ahead of derby match.'
-  ];
-
-  const feed = document.getElementById('news-feed');
-
-  const item = document.createElement('div');
-  item.className = 'bg-slate-800 p-3 rounded-lg';
-  item.innerText = randomNews[Math.floor(Math.random() * randomNews.length)];
-
-  feed.prepend(item);
-
-  if (feed.children.length > 8) {
-    feed.removeChild(feed.lastChild);
-  }
-
-  players.forEach(player => {
-    if (Math.random() > 0.5) {
-      player.morale = Math.min(100, player.morale + 1);
-    } else {
-      player.morale = Math.max(50, player.morale - 1);
-    }
-
-    if (player.age < 24 && Math.random() > 0.7) {
-      player.overall += 1;
-    }
-
-    if (player.age > 30 && Math.random() > 0.8) {
-      player.overall -= 1;
-    }
-  });
-
-  localStorage.setItem('footballSave', JSON.stringify({
-    players,
-    homeScore,
-    awayScore,
-    season: '2026/2
+</body>
+</html>
