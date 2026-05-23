@@ -60,14 +60,7 @@
       background: #222c44;
     }
 
-    #game {
-      display: none;
-    }
-
-    #intro {
-      display: block;
-    }
-
+    #game { display: none; }
     #commentary {
       background: #0f1629;
       padding: 10px;
@@ -75,6 +68,8 @@
       min-height: 120px;
       text-align: left;
     }
+
+    #log { text-align: left; }
   </style>
 </head>
 
@@ -82,16 +77,16 @@
 
 <div class="box">
 
-  <!-- INTRO SCREEN -->
+  <!-- INTRO -->
   <div id="intro">
     <h1>⚽ Football Career Simulator</h1>
 
-    <h2>🎮 Start Your Career</h2>
+    <h2>Start Your Career</h2>
 
-    <p>Enter your name:</p>
-    <input id="playerName" placeholder="Your name">
+    <input id="playerName" placeholder="Enter name">
 
-    <p>Choose position:</p>
+    <br><br>
+
     <select id="position">
       <option value="striker">Striker ⚽</option>
       <option value="midfielder">Midfielder 🎮</option>
@@ -99,13 +94,14 @@
     </select>
 
     <br><br>
+
     <button class="start" onclick="startGame()">Start Career</button>
   </div>
 
-  <!-- GAME SCREEN -->
+  <!-- GAME -->
   <div id="game">
 
-    <h1>⚽ Football Career Simulator</h1>
+    <h1>⚽ Career Mode</h1>
 
     <h2>👤 Player</h2>
     <p>Name: <span id="name"></span></p>
@@ -114,7 +110,7 @@
     <p>Club: <span id="club"></span></p>
     <p>Money: £<span id="money"></span></p>
     <p>Reputation: <span id="rep"></span></p>
-    <p>Season Week: <span id="week"></span> / 10</p>
+    <p>Week: <span id="week"></span>/10</p>
 
     <hr>
 
@@ -135,12 +131,12 @@
 
     <hr>
 
-    <h2>📺 Live Match Commentary</h2>
+    <h2>📺 Live Commentary</h2>
     <div id="commentary"></div>
 
     <hr>
 
-    <h2>🏆 League Table</h2>
+    <h2>🏆 League</h2>
     <table>
       <thead>
         <tr>
@@ -156,7 +152,7 @@
 
     <hr>
 
-    <h2>📰 Career Log</h2>
+    <h2>📰 Log</h2>
     <div id="log"></div>
 
   </div>
@@ -165,62 +161,54 @@
 
 <script>
 
-/* -----------------------
-   GAME STATE
-------------------------*/
+/* ---------------- SAFE GAME STATE ---------------- */
 
-let game = {
-  name: "",
-  position: "",
-  age: 16,
-  club: "You FC",
-  money: 0,
-  rep: 0,
-  week: 1,
+let game = getDefaultGame();
 
-  stats: {
-    pace: 30,
-    shoot: 30,
-    pass: 30,
-    fit: 50
-  },
+/* ---------------- SAFE LOAD ---------------- */
 
-  teams: [],
-  log: []
-};
-
-/* -----------------------
-   INTRO + CHARACTER CREATION
-------------------------*/
-
-function startGame() {
-  let name = document.getElementById("playerName").value;
-  let pos = document.getElementById("position").value;
-
-  if (!name) {
-    alert("Enter a name!");
-    return;
+function loadGame() {
+  try {
+    let save = localStorage.getItem("football_safe");
+    if (save) {
+      let parsed = JSON.parse(save);
+      if (parsed && parsed.stats && parsed.teams) {
+        game = parsed;
+      }
+    }
+  } catch (e) {
+    console.log("Save corrupted - resetting");
   }
-
-  game.name = name;
-  game.position = pos;
-
-  // position bonuses
-  if (pos === "striker") game.stats.shoot += 10;
-  if (pos === "midfielder") game.stats.pass += 10;
-  if (pos === "defender") game.stats.fit += 10;
-
-  document.getElementById("intro").style.display = "none";
-  document.getElementById("game").style.display = "block";
-
-  initLeague();
-  updateUI();
-  addLog("🎮 Career started!");
 }
 
-/* -----------------------
-   LEAGUE INIT
-------------------------*/
+loadGame();
+
+/* ---------------- DEFAULT GAME ---------------- */
+
+function getDefaultGame() {
+  return {
+    started: false,
+    name: "",
+    position: "",
+    age: 16,
+    club: "You FC",
+    money: 0,
+    rep: 0,
+    week: 1,
+
+    stats: {
+      pace: 30,
+      shoot: 30,
+      pass: 30,
+      fit: 50
+    },
+
+    teams: [],
+    log: []
+  };
+}
+
+/* ---------------- INIT LEAGUE ---------------- */
 
 function createTeam(name) {
   return { name, played: 0, wins: 0, losses: 0, points: 0 };
@@ -237,32 +225,63 @@ function initLeague() {
   ];
 }
 
-/* -----------------------
-   SAVE / RESET
-------------------------*/
+/* ---------------- START GAME ---------------- */
 
-function saveGame() {
-  localStorage.setItem("footballIntro", JSON.stringify(game));
-  addLog("💾 Saved");
+function startGame() {
+
+  let name = document.getElementById("playerName").value;
+  let pos = document.getElementById("position").value;
+
+  if (!name || name.trim() === "") {
+    alert("Enter a name!");
+    return;
+  }
+
+  game = getDefaultGame();
+
+  game.started = true;
+  game.name = name.trim();
+  game.position = pos;
+
+  if (pos === "striker") game.stats.shoot += 10;
+  if (pos === "midfielder") game.stats.pass += 10;
+  if (pos === "defender") game.stats.fit += 10;
+
+  initLeague();
+
+  document.getElementById("intro").style.display = "none";
+  document.getElementById("game").style.display = "block";
+
+  addLog("🎮 Career started!");
+  updateUI();
 }
 
+/* ---------------- SAFE SAVE ---------------- */
+
+function saveGame() {
+  try {
+    localStorage.setItem("football_safe", JSON.stringify(game));
+    addLog("💾 Saved");
+  } catch (e) {
+    alert("Save failed");
+  }
+}
+
+/* ---------------- RESET ---------------- */
+
 function resetGame() {
-  localStorage.removeItem("footballIntro");
+  localStorage.removeItem("football_safe");
   location.reload();
 }
 
-/* -----------------------
-   LOG
-------------------------*/
+/* ---------------- LOG ---------------- */
 
-function addLog(text) {
-  game.log.unshift(text);
+function addLog(t) {
+  game.log.unshift(t);
   if (game.log.length > 10) game.log.pop();
 }
 
-/* -----------------------
-   TRAIN
-------------------------*/
+/* ---------------- TRAIN ---------------- */
 
 function train() {
   let stat = ["pace", "shoot", "pass"][Math.floor(Math.random() * 3)];
@@ -271,12 +290,145 @@ function train() {
   game.stats.fit -= 2;
   game.age += 0.1;
 
-  addLog(`🏋️ Improved ${stat}`);
+  addLog("🏋️ Improved " + stat);
   updateUI();
 }
 
-/* -----------------------
-   MATCH + COMMENTARY
-------------------------*/
+/* ---------------- MATCH ---------------- */
 
-function live
+function playMatch() {
+
+  let opp = game.teams[Math.floor(Math.random() * game.teams.length)];
+  let you = game.teams.find(t => t.name === game.club);
+
+  let power =
+    game.stats.pace +
+    game.stats.shoot +
+    game.stats.pass +
+    game.stats.fit +
+    game.rep;
+
+  let oppPower = 140 + Math.random() * 90;
+
+  you.played++;
+  opp.played++;
+
+  game.age += 0.2;
+
+  let result;
+
+  if (power > oppPower) {
+    you.wins++;
+    you.points += 3;
+    opp.losses++;
+    game.money += 300;
+    game.rep += 5;
+    addLog("🏆 Won vs " + opp.name);
+    result = "win";
+  } else {
+    you.losses++;
+    opp.wins++;
+    opp.points += 3;
+    game.rep += 1;
+    addLog("😓 Lost vs " + opp.name);
+    result = "loss";
+  }
+
+  game.week++;
+
+  if (game.week > 10) endSeason();
+
+  liveCommentary(result);
+  updateUI();
+}
+
+/* ---------------- COMMENTARY ---------------- */
+
+function liveCommentary(result) {
+
+  let lines = [
+    "Kick-off!",
+    "Midfield battle...",
+    "Chance created!",
+    "Shot on goal!",
+    "Defensive pressure!"
+  ];
+
+  lines.push(result === "win"
+    ? "GOAL! YOU WIN!"
+    : "Full time... defeat.");
+
+  let html = "";
+  lines.forEach(l => html += `<p>⚽ ${l}</p>`);
+
+  document.getElementById("commentary").innerHTML = html;
+}
+
+/* ---------------- SEASON ---------------- */
+
+function endSeason() {
+  addLog("🏁 Season finished!");
+
+  game.teams.forEach(t => {
+    t.played = 0;
+    t.wins = 0;
+    t.losses = 0;
+    t.points = 0;
+  });
+
+  game.week = 1;
+}
+
+/* ---------------- UI ---------------- */
+
+function updateUI() {
+
+  if (!game.started) return;
+
+  document.getElementById("name").innerText = game.name;
+  document.getElementById("pos").innerText = game.position;
+
+  document.getElementById("age").innerText = game.age.toFixed(1);
+  document.getElementById("club").innerText = game.club;
+  document.getElementById("money").innerText = game.money;
+  document.getElementById("rep").innerText = game.rep;
+  document.getElementById("week").innerText = game.week;
+
+  document.getElementById("pace").innerText = game.stats.pace;
+  document.getElementById("shoot").innerText = game.stats.shoot;
+  document.getElementById("pass").innerText = game.stats.pass;
+  document.getElementById("fit").innerText = game.stats.fit;
+
+  let html = "";
+  game.teams.forEach(t => {
+    html += `<tr>
+      <td>${t.name}</td>
+      <td>${t.played}</td>
+      <td>${t.wins}</td>
+      <td>${t.losses}</td>
+      <td>${t.points}</td>
+    </tr>`;
+  });
+
+  document.getElementById("table").innerHTML = html;
+
+  let logHTML = "";
+  game.log.forEach(l => logHTML += `<p>${l}</p>`);
+  document.getElementById("log").innerHTML = logHTML;
+}
+
+/* ---------------- AUTO FIX ON LOAD ---------------- */
+
+window.onload = () => {
+  if (game.started) {
+    document.getElementById("intro").style.display = "none";
+    document.getElementById("game").style.display = "block";
+    initLeague();
+    updateUI();
+  }
+};
+
+</script>
+
+</body>
+</html>
