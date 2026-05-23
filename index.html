@@ -2,210 +2,152 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>Football Career Mode - AAA+</title>
+<title>Football Career Mode - CONSOLE EDITION</title>
 <style>
-body{margin:0;font-family:Arial;background:#070b14;color:white}
-header{padding:18px;background:linear-gradient(90deg,#16a34a,#0ea5e9)}
-h1{margin:0;font-size:26px}
-.container{padding:14px;display:grid;gap:14px}
-.card{background:#111827;border:1px solid #1f2937;border-radius:14px;padding:14px}
-button{background:#16a34a;color:white;border:none;padding:10px;border-radius:8px;cursor:pointer;margin-top:6px}
+body{margin:0;font-family:system-ui,Arial;background:#050814;color:#fff}
+header{padding:16px;background:linear-gradient(90deg,#16a34a,#0ea5e9)}
+h1{margin:0;font-size:22px}
+.container{padding:12px;display:grid;gap:12px;max-width:1100px;margin:auto}
+.card{background:#0f172a;border:1px solid #1f2937;border-radius:14px;padding:12px}
+button{background:#16a34a;color:#fff;border:0;padding:10px;border-radius:10px;cursor:pointer;font-weight:700}
 button:hover{background:#22c55e}
-.flex{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
-.small{font-size:12px;color:#9ca3af}
-.stat{font-size:18px;font-weight:bold}
-.table{width:100%;border-collapse:collapse}
-.table td,.table th{border-bottom:1px solid #1f2937;padding:8px}
-.pitch{height:160px;background:linear-gradient(90deg,#0f5132,#14532d);border-radius:12px;position:relative;overflow:hidden}
-.ball{width:18px;height:18px;border-radius:50%;background:white;position:absolute;top:70px;left:10px;transition:all 0.7s linear}
-.commentary{font-size:12px;color:#d1d5db;margin-top:8px;height:90px;overflow:auto}
+.flex{display:flex;gap:10px;flex-wrap:wrap;justify-content:space-between}
+.small{font-size:12px;color:#94a3b8}
+.stat{font-size:18px;font-weight:800}
+.grid{display:grid;gap:10px}
+.pitch{height:180px;background:linear-gradient(90deg,#14532d,#166534);border-radius:12px;position:relative;overflow:hidden}
+.ball{width:14px;height:14px;border-radius:50%;background:#fff;position:absolute;left:10px;top:80px;transition:all .5s linear}
+.commentary{height:120px;overflow:auto;font-size:12px;color:#cbd5e1;margin-top:8px}
 .badge{background:#1f2937;padding:3px 8px;border-radius:999px;font-size:11px}
+.bar{height:8px;background:#1f2937;border-radius:999px;overflow:hidden}
+.bar > div{height:100%;background:#22c55e;width:0%}
+table{width:100%;border-collapse:collapse}
+td,th{border-bottom:1px solid #1f2937;padding:6px;font-size:12px}
 </style>
 </head>
-<body><header>
-<h1>⚽ AAA+ Career Mode</h1>
-<div class="small">Full Career + Season + Live Match Engine</div>
-</header><div class="container"><!-- PLAYER --><div class="card">
+<body>
+<header>
+<h1>⚽ CONSOLE CAREER MODE</h1>
+<div class="small">Full Simulation Engine • AI Matches • Season System • Tactics</div>
+</header><div class="container"><div class="card">
 <h2>JP IRWIN</h2>
 <div class="flex">
 <div>OVR <div class="stat" id="ovr">75</div></div>
-<div>Morale <div class="stat" id="morale">80</div></div>
-<div>Fatigue <div class="stat" id="fatigue">0</div></div>
-<div>Form <div class="stat" id="form">6.8</div></div>
+<div>FIT <div class="stat" id="fit">100</div></div>
+<div>MOR <div class="stat" id="mor">80</div></div>
+<div>FORM <div class="stat" id="form">6.8</div></div>
 </div>
-<div class="flex" style="margin-top:10px">
-<div class="small">Week <b id="week">1</b></div>
-<div class="small">Month <b id="month">Aug</b></div>
-<div class="small">Year <b id="year">2026</b></div>
-</div>
-</div><!-- ACTIONS --><div class="card">
-<h3>Actions</h3>
-<button onclick="train()">Train</button>
-<button onclick="playMatch()">Play Live Match</button>
-<button onclick="rest()">Rest</button>
-</div><!-- LIVE MATCH --><div class="card">
-<h3>Live Match Engine</h3>
-<div class="pitch">
-<div class="ball" id="ball"></div>
-</div>
-<div class="commentary" id="commentary">Awaiting kickoff...</div>
-</div><!-- STATS --><div class="card">
-<h3>Career Stats</h3>
+<div class="small">Season: <span id="season">2026/27</span> • Week <span id="week">1</span></div>
+</div><div class="card">
+<h3>Tactics</h3>
 <div class="flex">
-<div>Goals <b id="goals">0</b></div>
-<div>Assists <b id="assists">0</b></div>
-<div>Matches <b id="matches">0</b></div>
-<div>Rating <b id="rating">0</b></div>
+<button onclick="setTactic('attacking')">Attacking</button>
+<button onclick="setTactic('balanced')">Balanced</button>
+<button onclick="setTactic('defensive')">Defensive</button>
 </div>
-</div><!-- AWARDS --><div class="card">
-<h3>Awards</h3>
-<div id="awards" class="small">No awards yet</div>
-</div><!-- TRANSFERS --><div class="card">
-<h3>Transfers</h3>
-<div id="transfers"></div>
-</div><!-- LEAGUE --><div class="card">
-<h3>League Table</h3>
-<table class="table">
-<tbody id="league"></tbody>
+<div class="small">Current: <span id="tactic">Balanced</span></div>
+</div><div class="card">
+<h3>Match Control</h3>
+<button onclick="playFullMatch()">Simulate Full 90 Min Match</button>
+<div class="pitch"><div class="ball" id="ball"></div></div>
+<div class="commentary" id="log">Ready for match...</div>
+</div><div class="card">
+<h3>Player Stats</h3>
+<div class="flex">
+<div>Goals <b id="g">0</b></div>
+<div>Assists <b id="a">0</b></div>
+<div>Matches <b id="m">0</b></div>
+<div>xG <b id="xg">0.0</b></div>
+</div>
+<div class="bar"><div id="staminaBar"></div></div>
+<div class="small">Stamina</div>
+</div><div class="card">
+<h3>League Simulation</h3>
+<table>
+<tbody id="table"></tbody>
 </table>
+</div><div class="card">
+<h3>Career Events</h3>
+<div id="events" class="small">No events</div>
 </div></div><script>
 
-let player={ovr:75,morale:80,fatigue:0,goals:0,assists:0,matches:0,rating:0}
+let player={ovr:75,fit:100,mor:80,goals:0,assists:0,matches:0,xg:0,form:6.8}
+let week=1
+let tactic="balanced"
 
-let season={week:1,month:0,year:2026}
-const months=["Aug","Sep","Oct","Nov","Dec","Jan","Feb","Mar","Apr","May"]
-
-let league=[
-{name:"Man United",pts:82},{name:"Man City",pts:79},{name:"Arsenal",pts:74},{name:"Liverpool",pts:71}
+let teams=[
+{name:"Man City",pts:82,atk:90,def:88},
+{name:"Man United",pts:78,atk:85,def:82},
+{name:"Arsenal",pts:75,atk:83,def:80},
+{name:"Liverpool",pts:74,atk:84,def:81},
+{name:"Chelsea",pts:69,atk:80,def:78}
 ]
 
-let awards=[]
-let transfers=[{club:"Real Madrid",wage:"£650k"},{club:"Bayern Munich",wage:"£520k"}]
+function setTactic(t){tactic=t;log("Tactic set to "+t);document.getElementById("tactic").innerText=t}
 
-function save(){localStorage.setItem("career",JSON.stringify({player,season,awards}))}
+function log(t){document.getElementById("log").innerHTML+="<br>• "+t}
 
-function advanceTime(){
-season.week++
-if(season.week%4===0) season.month++
-if(season.month>=months.length){season.month=0;season.year++;endSeason()}
+function moveBall(x){document.getElementById("ball").style.left=x+"%"}
+
+function staminaBar(){document.getElementById("staminaBar").style.width=player.fit+"%"}
+
+function simulateEvent(min){
+let r=Math.random()
+if(r<0.25)log(min+"' build up play")
+if(r<0.15){log(min+"' SHOT!");moveBall(70)}
+if(r<0.07){log(min+"' GOAL!!!");player.goals++;player.mor+=2}
+if(r>0.8)log(min+"' opponent attack")
 }
 
-function train(){
-player.ovr+=1
-player.fatigue+=5
-player.morale+=1
-addComment("Training completed")
-advanceTime()
-updateUI()
-save()
-}
-
-function rest(){
-player.fatigue=Math.max(0,player.fatigue-10)
-player.morale+=2
-addComment("Rest day")
-advanceTime()
-updateUI()
-save()
-}
-
-function playMatch(){
+function playFullMatch(){
 player.matches++
-addComment("Kickoff! Match starting...")
+player.fit-=18
+let xg=0
+let minutes=[1,10,20,30,40,50,60,70,80,90]
+log("Kickoff!")
 
-let goals=0
-let assists=0
-
-let steps=[
-{t:1000,text:"JP controls possession",pos:20},
-{t:2500,text:"Driving forward",pos:40},
-{t:4000,text:"Shot on target!",pos:70},
-{t:6000,text:"GOAL!!!",pos:90},
-{t:8000,text:"Full time whistle",pos:50}
-]
-
-steps.forEach(s=>{
+minutes.forEach((min,i)=>{
 setTimeout(()=>{
-addComment(s.text)
-animateBall(s.pos)
-if(s.text.includes("GOAL")){goals++;player.morale+=3}
-},s.t)
+moveBall(Math.random()*100)
+simulateEvent(min)
+xg+=Math.random()*0.25
+},i*600)
 })
 
 setTimeout(()=>{
-player.goals+=goals
-player.assists+=assists
-player.rating=6+Math.random()*3
-advanceTime()
-updateUI()
-checkAwards()
-save()
-addComment("Match finished rating: "+player.rating.toFixed(1))
-},9000)
+player.xg+=xg
+player.form=6+Math.random()*3
+player.ovr+=0.15
+week++
+update()
+updateLeague()
+staminaBar()
+log("Full time! xG: "+xg.toFixed(2))
+},7000)
 }
 
-function endSeason(){
-if(player.goals>15) awards.push("Golden Boot Candidate")
-if(player.rating>7.5) awards.push("Team of the Season")
-transfers.push({club:"PSG",wage:"£700k"})
-addComment("Season ended - transfer window open")
+function updateLeague(){
+teams.forEach(t=>t.pts+=Math.floor(Math.random()*3))
+teams.sort((a,b)=>b.pts-a.pts)
+document.getElementById("table").innerHTML=
+teams.map((t,i)=>`<tr><td>${i+1}</td><td>${t.name}</td><td>${t.pts}</td></tr>`).join("")
 }
 
-function acceptTransfer(i){
-player.ovr+=1
-player.morale=100
-transfers=[]
-addComment("Transfer completed!")
-updateUI()
+function update(){
+document.getElementById("ovr").innerText=Math.floor(player.ovr)
+document.getElementById("fit").innerText=player.fit
+document.getElementById("mor").innerText=player.mor
+document.getElementById("form").innerText=player.form.toFixed(1)
+document.getElementById("g").innerText=player.goals
+document.getElementById("a").innerText=player.assists
+document.getElementById("m").innerText=player.matches
+document.getElementById("xg").innerText=player.xg.toFixed(1)
+document.getElementById("week").innerText=week
+staminaBar()
 }
 
-function checkAwards(){
-if(player.rating>8) awards.push("Man of the Match")
-}
-
-function animateBall(pos){
-document.getElementById("ball").style.left=pos+"%"
-}
-
-function addComment(text){
-let box=document.getElementById("commentary")
-box.innerHTML+="<br>• "+text
-box.scrollTop=box.scrollHeight
-}
-
-function renderLeague(){
-document.getElementById("league").innerHTML=
-league.map(l=>`<tr><td>${l.name}</td><td>${l.pts}</td></tr>`).join("")
-}
-
-function renderTransfers(){
-document.getElementById("transfers").innerHTML=
-transfers.map((t,i)=>`<div class='card'>${t.club} ${t.wage||''}<br><button onclick='acceptTransfer(${i})'>Accept</button></div>`).join("")
-}
-
-function updateUI(){
-document.getElementById("ovr").innerText=player.ovr
-document.getElementById("morale").innerText=player.morale
-document.getElementById("fatigue").innerText=player.fatigue
-document.getElementById("goals").innerText=player.goals
-document.getElementById("assists").innerText=player.assists
-document.getElementById("matches").innerText=player.matches
-document.getElementById("rating").innerText=player.rating.toFixed(1)
-
-document.getElementById("week").innerText=season.week
-document.getElementById("month").innerText=months[season.month]
-document.getElementById("year").innerText=season.year
-
-let a=document.getElementById("awards")
-a.innerHTML=awards.length?awards.join("<br>"):"No awards yet"
-
-renderTransfers()
-renderLeague()
-}
-
-renderLeague()
-renderTransfers()
-updateUI()
+updateLeague()
+update()
 
 </script></body>
 </html>
